@@ -138,7 +138,7 @@ const MSG = (function () {
     // users page
     users_title: 'USERS & LICENSES', users_sub: 'Create a user or license key — HWID reset, renew, permanent time, ban. All control is yours.',
     app: 'App', new_user: '+ New User', new_license: '+ License Key',
-    local_storage: '● local storage', sqlite_live: '● SQLite live',
+    local_storage: '● virtual storage', sqlite_live: '● SQLite live',
     th_username: 'Username', th_type: 'Type', th_license: 'License Key', th_expires: 'Expires',
     th_hwid: 'HWID', th_status: 'Status', th_device: 'Device', th_actions: 'Actions',
     user_type: 'user', license_key: 'license-key',
