@@ -38,7 +38,7 @@ const LANGS = { en: 'English', hi: 'Hindi', ur: 'Urdu', bn: 'Bangla', ta: 'Tamil
 /* ---------- the engine ---------- */
 const Settings = (function () {
   const KEY = 'ishu.settings.v1';
-  let cfg = { lang: 'en', theme: 'void', accent: 'orange', server: 'http://localhost:3000' };
+  let cfg = { lang: 'en', theme: 'void', accent: 'orange' };
 
   function load() {
     try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); cfg = Object.assign(cfg, s); }

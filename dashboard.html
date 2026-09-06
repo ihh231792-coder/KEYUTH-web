@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=18">
+<link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
 
@@ -229,8 +229,8 @@
 .toast.out { opacity: 0; transform: translateX(30px); }
 </style>
 
-<script src="js/core.js?v=18"></script>
-<script src="js/settings.js?v=18"></script>
+<script src="js/core.js?v=19"></script>
+<script src="js/settings.js?v=19"></script>
 <script>
 const ME = (function () {
   const u = Auth.current();
@@ -239,8 +239,17 @@ const ME = (function () {
 })();
 
 /* API server address — set it from Settings → Server URL (public cloud URL).
-   Default keeps working while the panel is served by server.py itself. */
-let API_BASE = (Settings.cfg().server || 'http://localhost:3000').replace(/\/+$/, '');
+   If none is saved: served by the API host (e.g. Render) → same origin;
+   on GitHub Pages / localhost → falls back to localhost. */
+let API_BASE = (Settings.cfg().server || '').replace(/\/+$/, '');
+const _origin = window.location;
+if (!API_BASE &&
+    _origin.protocol.startsWith('http') &&
+    _origin.hostname !== 'localhost' && _origin.hostname !== '127.0.0.1' &&
+    !_origin.hostname.includes('github.io')) {
+  API_BASE = _origin.origin;
+}
+if (!API_BASE) API_BASE = 'http://localhost:3000';
 
 /* ============ Server detection ============ */
 let SERVER_ONLINE = false;
