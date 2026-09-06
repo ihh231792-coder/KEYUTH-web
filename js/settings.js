@@ -180,6 +180,8 @@ const MSG = (function () {
     google_setup: 'Google login not configured yet — put your Google Client ID in index.html (GOOGLE_CLIENT_ID).',
     google_offline: 'No internet — Google Sign-In needs a connection.',
     google_failed: 'Google sign-in failed. Please try again.',
+    google_blocked: 'Google sign-in is blocked on this address. Fix: add this URL in Google Cloud Console (Credentials → OAuth Client ID → Authorized JavaScript origins), or simply use Username & Password login above — it works on every address.',
+    g_alt: 'Google blocked? Username & Password se login karo (upar) — har jaga chalta hai.',
     // more (settings / keys / users modals)
     owner: 'Owner',
     key_type: 'Key Type', basic_key: 'Basic Key', live_key: 'Live Key (auto-swid)', owner_key: 'Owner Key',
@@ -222,7 +224,7 @@ const MSG = (function () {
 
   // ---- login-page + create-app keys (all 12 languages) ----
   var _login={
-    hi:{new_app:'+ नया ऐप',new_app_name:'ऐप का नाम',username:'यूज़रनेम',password:'पासवर्ड',login:'लॉगिन',no_account:'अकाउंट नहीं?',register:'रजिस्टर',create_account:'अकाउंट बनाएं',choose_username:'यूज़रनेम चुनें',create_password:'पासवर्ड बनाएं',already_registered:'पहले से रजिस्टर्ड?',continue_google:'Google से जारी रखें',or_use:'या लॉगिन करें',google_setup:'Google लॉगिन सेट नहीं है — index.html में अपना Google Client ID (GOOGLE_CLIENT_ID) डालें।',google_offline:'कोई इंटरनेट नहीं — Google साइन-इन के लिए कनेक्शन चाहिए।',google_failed:'Google साइन-इन विफल। फिर से कोशिश करें।'},
+    hi:{new_app:'+ नया ऐप',new_app_name:'ऐप का नाम',username:'यूज़रनेम',password:'पासवर्ड',login:'लॉगिन',no_account:'अकाउंट नहीं?',register:'रजिस्टर',create_account:'अकाउंट बनाएं',choose_username:'यूज़रनेम चुनें',create_password:'पासवर्ड बनाएं',already_registered:'पहले से रजिस्टर्ड?',continue_google:'Google से जारी रखें',or_use:'या लॉगिन करें',google_setup:'Google लॉगिन सेट नहीं है — index.html में अपना Google Client ID (GOOGLE_CLIENT_ID) डालें।',google_offline:'कोई इंटरनेट नहीं — Google साइन-इन के लिए कनेक्शन चाहिए।',google_failed:'Google साइन-इन विफल। फिर से कोशिश करें।',google_blocked:'इस पते पर Google लॉगिन ब्लॉक है — Google Cloud Console (OAuth Client ID → Authorized JavaScript origins) में यह URL जोड़ें, या ऊपर Username/Password से लॉगिन करें — वह हर जगह चलता है।',g_alt:'Google ब्लॉक है? ऊपर Username/Password यूज़ करो — हर जगह चलता है।'},
     ur:{new_app:'+ نیا ایپ',new_app_name:'ایپ کا نام',username:'صارف نام',password:'پاس ورڈ',login:'لاگ ان',no_account:'اکاؤنٹ نہیں?',register:'رجسٹر',create_account:'اکاؤنٹ بنائیں',choose_username:'صارف نام چنیں',create_password:'پاس ورڈ بنائیں',already_registered:'پہلے سے رجسٹرڈ?'},
     bn:{new_app:'+ নতুন অ্যাপ',new_app_name:'অ্যাপের নাম',username:'ব্যবহারকারীর নাম',password:'পাসওয়ার্ড',login:'লগইন',no_account:'অ্যাকাউন্ট নেই?',register:'নিবন্ধন',create_account:'অ্যাকাউন্ট তৈরি',choose_username:'ব্যবহারকারীর নাম বাছাই',create_password:'পাসওয়ার্ড তৈরি',already_registered:'ইতিমধ্যে নিবন্ধিত?'},
     ta:{new_app:'+ புதிய ஆப்',new_app_name:'ஆப் பெயர்',username:'பயனர் பெயர்',password:'கடவுச்சொல்',login:'உள்நுழைவு',no_account:'கணக்கு இல்லை?',register:'பதிவு',create_account:'கணக்கு உருவாக்கு',choose_username:'பயனர் பெயரைத் தேர்ந்தெடு',create_password:'கடவுச்சொல்லை உருவாக்கு',already_registered:'ஏற்கனவே பதிவு செய்துள்ளது?'},
