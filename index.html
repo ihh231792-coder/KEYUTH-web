@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<link rel="stylesheet" href="css/style.css?v=9">
+<link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body class="auth-body">
 
@@ -68,8 +68,8 @@
   </div>
 </div>
 
-<script src="js/core.js?v=9"></script>
-<script src="js/settings.js?v=9"></script>
+<script src="js/core.js?v=10"></script>
+<script src="js/settings.js?v=10"></script>
 <script>
 /* ===== login page language select (14 langs) ===== */
 function onLoginLang(code) {
@@ -81,12 +81,14 @@ function onLoginLang(code) {
    Setup: Google Cloud Console -> Credentials -> OAuth client ID (Web application)
    -> add Authorized JS origin (your GitHub Pages URL, e.g. https://yourname.github.io)
    -> paste the Client ID below (ends with .apps.googleusercontent.com) */
-const GOOGLE_CLIENT_ID = "PASTE_YOUR_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "456607613890-sor2nq8bep12c52s6cvmlc5ohd0lmbk3.apps.googleusercontent.com";
 
 function onGoogleCredential(res) {
   if (!res || !res.credential) return showAlert(t('google_failed'), 'error');
   const prof = GoogleAuth.profileFromJwt(res.credential);
   if (!prof) return showAlert(t('google_failed'), 'error');
+  if (prof.aud && prof.aud !== GOOGLE_CLIENT_ID) return showAlert(t('google_failed'), 'error');
+  if (prof.exp && Date.now() / 1000 > prof.exp) return showAlert(t('google_failed'), 'error');
   GoogleAuth.setToken(res.credential);
   const out = GoogleAuth.upsert(prof);
   if (!out.ok) return showAlert(out.msg || t('google_failed'), 'error');
