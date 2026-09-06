@@ -28,7 +28,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=14">
 </head>
 <body class="auth-body">
 
@@ -87,8 +87,8 @@
   </div>
 </div>
 
-<script src="js/core.js?v=13"></script>
-<script src="js/settings.js?v=13"></script>
+<script src="js/core.js?v=14"></script>
+<script src="js/settings.js?v=14"></script>
 <script>
 /* ===== login page language select (14 langs) ===== */
 function onLoginLang(code) {
@@ -139,7 +139,7 @@ function googlePopupLogin() {
   var state = Math.random().toString(36).slice(2) + Date.now();
   var nonce = Math.random().toString(36).slice(2) + Date.now();
   try { sessionStorage.setItem('ishu_gis_state', state); } catch(e) {}
-  var redirectUri = window.location.origin + window.location.pathname;
+  var redirectUri = window.location.origin + window.location.pathname.replace(/index\.html$/,'').replace(/[^\/]$/,'$&/');
   var qs = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID, redirect_uri: redirectUri,
     response_type: 'id_token', scope: 'openid email profile',
