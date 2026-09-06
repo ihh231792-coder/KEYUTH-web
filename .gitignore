@@ -1,0 +1,12 @@
+# data
+ishu_auth.db
+__pycache__/
+*.pyc
+
+# archives / backups
+*.rar
+*.zip
+
+# os / editors
+Thumbs.db
+.DS_Store

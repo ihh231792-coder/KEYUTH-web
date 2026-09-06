@@ -1,0 +1,995 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISHU AUTH - Dashboard</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=9">
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <h2 class="brand-name"><span class="ch">I</span><span class="ch">S</span><span class="ch">H</span><span class="ch">U</span><span class="ch">&nbsp;</span><span class="ch">A</span><span class="ch">U</span><span class="ch">T</span><span class="ch">H</span></h2>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn active" data-page="dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span data-i18n="nav_dashboard">Dashboard</span></button>
+      <button class="nav-btn" data-page="users"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span><span data-i18n="nav_users">Create Users</span></button>
+      <button class="nav-btn" data-page="apps"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span data-i18n="nav_apps">Applications</span></button>
+      <button class="nav-btn" data-page="keys"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span><span data-i18n="nav_keys">API Keys</span></button>
+      <button class="nav-btn" data-page="settings"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span data-i18n="nav_settings">Settings</span></button>
+      <button class="nav-btn" data-page="integrate"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span><span data-i18n="nav_install">Installation</span></button>
+    </nav>
+
+    <div class="user-box" id="userBox"></div>
+    <div class="logout-btn-wrapper">
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        <span data-i18n="sign_out">Sign Out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="hero">
+        <div class="hero-mark">ISHU AUTH</div>
+        <div class="hero-typing"><span id="heroType"></span><span class="caret">▌</span></div>
+        <div class="hero-sub">
+          <span class="hero-chip" onclick="showPage('apps')"><span data-i18n="hero_sub_app">APP</span> <b><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></b></span>
+          <span class="hero-chip" onclick="showPage('keys')"><span data-i18n="hero_sub_keys">KEYS</span> <b><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></b></span>
+          <span class="hero-chip" onclick="showPage('users')"><span data-i18n="hero_sub_control">CONTROL</span> <b><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></b></span>
+        </div>
+      </div>
+
+      <div class="grid grid-3" id="statGrid"></div>
+
+      <div class="grid grid-2" style="margin-top:22px">
+        <div class="card">
+          <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Identity</h3>
+          <p class="label">click to copy · secret is blurred</p>
+          <div class="detail-rows" id="secretRows"></div>
+        </div>
+        <div class="card">
+          <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Live Key Stream</h3>
+          <p class="label">Latest generated keys &amp; rotations</p>
+          <div id="liveStream"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPLICATIONS -->
+    <section class="page" id="page-apps">
+      <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h1 data-i18n="apps_title">APPLICATIONS</h1>
+          <p data-i18n="apps_sub">Your app is auto-created — rename it with the pencil.</p>
+        </div>
+        <div class="actions">
+          <button class="btn-sm accent" style="padding:12px 20px" onclick="openAppModal()"><span data-i18n="new_app">+ New App</span></button>
+        </div>
+      </div>
+      <div class="grid grid-3" id="appGrid"></div>
+    </section>
+
+    <!-- API KEYS -->
+    <section class="page" id="page-keys">
+      <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h1 data-i18n="keys_title">API KEYS</h1>
+          <p data-i18n="keys_sub">Create a key as per your need — permanent or day/year.</p>
+        </div>
+        <div class="actions">
+          <button class="btn-sm accent" style="padding:12px 20px" onclick="openKeyModal()"><span data-i18n="gen_key">+ Generate</span></button>
+        </div>
+      </div>
+
+      <div class="master-box">
+        <div class="label-row">
+          <span class="chip" data-i18n="master_label">MASTER API KEY · use it only after generating</span>
+          <button class="btn-sm" id="masterToggle" onclick="toggleMaster()"></button>
+        </div>
+        <div class="key-box">
+          <code id="masterVal" class="key-hidden">••••••••••••••••••••••••••••</code>
+          <button class="copy-btn" id="masterCopy" style="display:none" onclick="copyMaster()">COPY</button>
+        </div>
+      </div>
+
+      <div id="keyList"></div>
+    </section>
+
+    <!-- USERS / LICENSES -->
+    <section class="page" id="page-users">
+      <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h1 data-i18n="users_title">USERS &amp; LICENSES</h1>
+          <p data-i18n="users_sub">Create a user or license key — HWID reset, renew, permanent time, ban. All control is yours.</p>
+        </div>
+        <div class="actions">
+          <span class="chip" id="serverChip"><span class="badge-ready" data-i18n="local_storage">● local storage</span></span>
+        </div>
+      </div>
+
+      <div class="panel-bar">
+        <div class="input-group">
+          <label data-i18n="app">App</label>
+          <select class="input" id="uAppSel" onchange="renderUsers()"></select>
+        </div>
+        <div class="spacer"></div>
+        <div class="group">
+          <button class="btn-sm accent" style="padding:12px 22px" onclick="openUserModal('user')"><span data-i18n="new_user">+ New User</span></button>
+          <button class="btn-sm" style="padding:12px 22px" onclick="openUserModal('license')"><span data-i18n="new_license">+ License Key</span></button>
+        </div>
+      </div>
+
+      <div id="userPanel"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="page" id="page-settings">
+      <div class="page-head">
+        <h1 data-i18n="settings_title">SETTINGS</h1>
+        <p data-i18n="settings_sub">Language, theme and color — all under your control.</p>
+      </div>
+      <div class="settings-grid" id="settingsRoot"></div>
+    </section>
+
+    <!-- INSTALLATION -->
+    <section class="page" id="page-integrate">
+      <div class="page-head">
+        <h1 data-i18n="install_title">INSTALLATION</h1>
+        <p data-i18n="install_sub">Connect your app, bot or software to ISHU AUTH — no packages to install.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;border-left:3px solid var(--accent)">
+        <h3 data-i18n="how_works"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>How it works</h3>
+        <p style="margin-top:6px">
+          Every user you create from the panel as a <b>user/pass</b> or <b>license key</b> logs in the same way —
+          your software <b>verifies</b> it with the server. Time expiry, HWID reset, ban — <b>all control is yours</b>,
+          from a live SQLite database.
+        </p>
+        <div class="how-row" style="margin-top:14px"><div class="n">1</div><p>Copy the <b>API Key</b> and the app <b>App ID</b> from the API Keys page.</p></div>
+        <div class="how-row"><div class="n">2</div><p>Create a user + password or a license key from the Users page.</p></div>
+        <div class="how-row"><div class="n">3</div><p>Paste the code below into your software — login is ready.</p></div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;border-left:3px solid var(--accent-3)">
+        <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ISHU AUTH Package — C# ready</h3>
+        <p style="margin-top:6px">
+          Download the package → drop <b>IshuAuth.cs</b> into your project → done.
+          <b>No NuGet or package installation is required</b> — .NET's built-in <code>System.Net.Http</code> is enough.
+          It is also safe for native AOT builds.
+        </p>
+        <div class="how-row" style="margin-top:14px"><div class="n">1</div><p><a class="pkg-btn" href="IshuAuth_Package.zip"><span data-i18n="download_pkg">Download Package</span></a> — it contains IshuAuth.cs + Example.cs + README.txt.</p></div>
+        <div class="how-row"><div class="n">2</div><p>Drop <b>IshuAuth.cs</b> into your project's source folder.</p></div>
+        <div class="how-row"><div class="n">3</div><p>Call <code>auth.Verify(user, pass, hwid)</code> in your app — create user, HWID reset, renew and ban are all controlled from the same file.</p></div>
+      </div>
+
+      <div class="tabs" id="codeTabs">
+        <button class="tab-btn active" data-tab="py" data-i18n="tab_py">Python</button>
+        <button class="tab-btn" data-tab="cs" data-i18n="tab_cs">C#</button>
+        <button class="tab-btn" data-tab="js" data-i18n="tab_js">JavaScript</button>
+        <button class="tab-btn" data-tab="gen" data-i18n="tab_gen">Generic / HTTP</button>
+      </div>
+      <div id="codeBlocks"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ MODAL ROOT ============ -->
+<div class="modal-overlay" id="modalRoot">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<div id="toast-root" style="position:fixed;bottom:20px;right:20px;z-index:2000"></div>
+
+<style>
+.toast {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green);
+  color: var(--text);
+  padding: 12px 18px;
+  border-radius: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: fadeUp 0.3s ease;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.toast.error { border-left-color: var(--red); }
+.toast.out { opacity: 0; transform: translateX(30px); }
+</style>
+
+<script src="js/core.js?v=9"></script>
+<script src="js/settings.js?v=9"></script>
+<script>
+const ME = (function () {
+  const u = Auth.current();
+  if (!u) { location.href = 'index.html'; throw new Error('nope'); }
+  return u;
+})();
+
+/* ============ Server detection ============ */
+let SERVER_ONLINE = false;
+async function pingServer() {
+  try {
+    const r = await fetch('api/ping', { cache: 'no-store' });
+    const j = await r.json();
+    SERVER_ONLINE = !!(j && j.ok);
+  } catch (e) { SERVER_ONLINE = false; }
+  const chip = el('serverChip');
+  if (chip) chip.innerHTML = SERVER_ONLINE
+    ? '<span class="badge-live">● ' + t('sqlite_live') + '</span>'
+    : '<span class="badge-ready">● ' + t('local_storage') + '</span>';
+  renderUsers();
+}
+async function svc(path, opts) {
+  try {
+    const r = await fetch(path, opts);
+    let j; try { j = await r.json(); } catch (e) { j = { ok: false, message: 'bad response' }; }
+    return j;
+  } catch (e) { return { ok: false, message: 'server unreachable' }; }
+}
+function jsonOpts(method, body, extra) {
+  return { method, headers: Object.assign({ 'Content-Type': 'application/json' }, extra || {}), body: JSON.stringify(body) };
+}
+
+/* ============ Nav ============ */
+function showPage(name) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === name));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el('page-' + name).classList.add('active');
+}
+document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+
+function doLogout() { GoogleAuth.signOut(); location.href = 'index.html'; }
+
+/* ============ Ripple (click animation) ============ */
+document.addEventListener('pointerdown', e => {
+  const t = e.target.closest('.btn, .btn-sm, .copy-btn, .tab-btn, .icon-btn, .nav-btn');
+  if (!t) return;
+  const r = t.getBoundingClientRect();
+  const d = Math.max(r.width, r.height) * 1.3;
+  const s = document.createElement('span');
+  s.className = 'ripple';
+  s.style.width = s.style.height = d + 'px';
+  s.style.left = (e.clientX - r.left - d / 2) + 'px';
+  s.style.top = (e.clientY - r.top - d / 2) + 'px';
+  t.appendChild(s);
+  setTimeout(() => s.remove(), 600);
+});
+
+/* ============ Mouse light (smooth trailing) ============ */
+const glow = document.createElement('div');
+glow.id = 'curGlow';
+document.body.appendChild(glow);
+let gx = innerWidth / 2, gy = innerHeight / 2, tx = gx, ty = gy, gRaf = null;
+document.addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; }, { passive: true });
+function glowLoop() {
+  gx += (tx - gx) * 0.38;
+  gy += (ty - gy) * 0.38;
+  glow.style.transform = 'translate(' + gx.toFixed(1) + 'px, ' + gy.toFixed(1) + 'px)';
+  gRaf = requestAnimationFrame(glowLoop);
+}
+gRaf = requestAnimationFrame(glowLoop);
+
+/* ============ Hero typewriter ============ */
+const phrases = ['DEVELOPED BY ISHU', 'LIVE KEY SYSTEM', 'CONTROL YOUR PROJECT', 'HWID RESET READY'];
+let pi = 0, ci = 0, deleting = false;
+function typeLoop() {
+  const t = el('heroType');
+  if (!t) return;
+  const w = phrases[pi];
+  t.textContent = w.slice(0, ci);
+  if (!deleting && ci < w.length) { ci++; setTimeout(typeLoop, 75); }
+  else if (!deleting) { deleting = true; setTimeout(typeLoop, 1500); }
+  else if (ci > 0) { ci--; setTimeout(typeLoop, 32); }
+  else { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(typeLoop, 250); }
+}
+
+/* ============ helpers ============ */
+function appSwid(app) { return SWID.generate(ME.ownerId, app.appId, app.version).fingerprint; }
+function toggleSecret(node, value) {
+  if (node.classList.contains('blurred')) node.classList.remove('blurred');
+  copyText(value);
+}
+
+/* ============ Dashboard ============ */
+function renderDash() {
+  const apps = Apps.all();
+  const keys = Keys.all();
+  const licCount = Licenses.all().length;
+
+  el('userBox').innerHTML = `
+    <div class="avatar"><img src="logo.png" alt="ISHU"></div>
+    <div class="uinfo">
+      <div class="uname">${esc(ME.username)}</div>
+      <div class="owner-tag">${t('owner') || 'Owner'}</div>
+    </div>`;
+
+  el('statGrid').innerHTML = `
+    <div class="card stat-card"><div class="label">${t('stat_apps')}</div><div class="big">${apps.length}</div><div class="trend">${t('stat_apps_trend')}</div></div>
+    <div class="card stat-card"><div class="label">${t('stat_keys')}</div><div class="big">${keys.length}</div><div class="trend">${keys.filter(k => k.status === 'active').length} ${t('stat_keys_trend')}</div></div>
+    <div class="card stat-card"><div class="label">${t('stat_users')}</div><div class="big">${licCount}</div><div class="trend">${t('stat_users_trend')}</div></div>`;
+
+  el('secretRows').innerHTML = `
+    <div class="detail-row"><div class="dk">${t('owner_id')}</div><div class="dv" title="click to copy" onclick="copyText('${esc(ME.ownerId)}')">${esc(ME.ownerId)}</div></div>
+    <div class="detail-row"><div class="dk">${t('secret_id')}</div><div class="dv blurred" title="click to reveal + copy" onclick="toggleSecret(this,'${esc(ME.secretId)}')">${esc(ME.secretId)}</div></div>
+    <div class="detail-row"><div class="dk">${t('version')}</div><div class="dv">${esc(ME.version)}</div></div>`;
+
+  const sorted = [...keys].slice(0, 6);
+  el('liveStream').innerHTML = sorted.length
+    ? sorted.map(k => `<div class="key-row">
+        <div class="kid">${esc(fmt.since(k.createdAt))}</div>
+        <div class="key-val">${esc(k.value.slice(0, 24))}…</div>
+        <span class="exp">${k.expiresAt ? t('till') + ' ' + fmt.time(k.expiresAt) : t('forever')}</span>
+        ${statusBadge(k.status)}</div>`).join('')
+    : `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>${t('no_keys')}</div>`;
+}
+
+/* ============ Apps ============ */
+const SVG_PEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+const SVG_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+const SVG_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+
+function renderApps() {
+  const apps = Apps.all();
+  const grid = el('appGrid');
+  if (!apps.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>${t('loading_app')}</div>`;
+    return;
+  }
+  grid.innerHTML = apps.map(a => `
+    <div class="card app-card">
+      <div class="app-name-row" id="nameRow-${a.id}">
+        <span class="app-name">${esc(a.name)}</span>
+        <button class="icon-btn edit" title="Edit name" onclick="startEditName('${a.id}')">${SVG_PEN}</button>
+        <button class="icon-btn cancel" title="Delete app" onclick="deleteApp('${a.id}')">${SVG_X}</button>
+      </div>
+      <div class="app-id">${esc(a.appId)}</div>
+
+      <div class="detail-rows">
+        <div class="detail-row"><div class="dk">${t('owner_id')}</div><div class="dv" title="click to copy" onclick="copyText('${esc(a.ownerTag)}')">${esc(a.ownerTag)}</div></div>
+        <div class="detail-row"><div class="dk">${t('secret_id')}</div><div class="dv blurred" title="click to reveal + copy" onclick="toggleSecret(this,'${esc(a.secretId)}')">${esc(a.secretId)}</div></div>
+        <div class="detail-row"><div class="dk">${t('version')}</div><div class="dv">${esc(a.version)}</div></div>
+      </div>
+
+      <div class="swid-box">
+        <div class="swid-head"><span>HWID <span class="badge-live">● LIVE</span></span>
+          <button class="copy-btn" style="padding:2px 8px;font-size:9px" onclick="copyText('${esc(appSwid(a))}')">COPY</button></div>
+        <div class="swid-body">${esc(appSwid(a))}</div>
+      </div>
+
+      <div class="app-actions">
+        <button class="btn-sm" onclick="refreshAppHWID('${a.id}')">↻ HWID</button>
+        <button class="btn-sm accent" onclick="gotoUsers('${a.id}')">●● Licenses</button>
+        <button class="btn-sm" onclick="copyText('${esc(a.appId)}')">App ID</button>
+      </div>
+    </div>`).join('');
+}
+
+function gotoUsers(appId) {
+  showPage('users');
+  el('uAppSel').value = appId;
+  renderUsers();
+}
+
+function startEditName(id) {
+  const a = Apps.get(id); if (!a) return;
+  el('nameRow-' + id).innerHTML = `
+    <div class="inline-edit">
+      <input id="ne-${id}" value="${esc(a.name)}" maxlength="40">
+      <button class="icon-btn confirm" title="Save" onclick="saveName('${id}')">${SVG_CHECK}</button>
+      <button class="icon-btn cancel" title="Cancel" onclick="renderApps()">${SVG_X}</button>
+    </div>`;
+  const inp = el('ne-' + id);
+  inp.focus(); inp.select();
+  inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') saveName(id); });
+}
+function saveName(id) {
+  const input = el('ne-' + id);
+  if (!input) return;
+  Apps.updateFields(id, { name: input.value.trim() || 'Untitled' });
+  toast(t('renamed'), 'ok');
+  renderApps();
+}
+
+function refreshAppHWID(id) {
+  Apps.refreshSWID(id);
+  toast(t('key_rotated'), 'ok');
+  renderApps();
+}
+
+function deleteApp(id) {
+  if (!confirm(t('confirm_del_app'))) return;
+  Apps.remove(id);
+  (Licenses.all(id) || []).forEach(l => Licenses.remove(l.id));
+  Apps.ensureDefault();
+  toast(t('app_deleted'), 'ok');
+  renderApps(); renderDash(); fillAppSel();
+}
+
+function openAppModal() {
+  el('modalRoot').classList.add('show');
+  el('modalBox').innerHTML = `
+    <h2>${t('new_app')}</h2>
+    <div class="input-group" style="margin-bottom:16px">
+      <label>${t('new_app_name')}</label>
+      <input class="input" id="mAppName" placeholder="${t('new_app_name')}" maxlength="40" autofocus>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="createApp()">${t('create')}</button>
+      <button class="btn btn-ghost" onclick="closeModal()">${t('cancel')}</button>
+    </div>`;
+  const inp = el('mAppName');
+  inp.focus();
+  inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') createApp(); });
+}
+function createApp() {
+  const input = el('mAppName');
+  if (!input) return;
+  const name = input.value.trim();
+  if (!name) return toast('App name required', 'error');
+  Apps.create(name, '1.0');
+  toast(t('created_user'), 'ok');
+  closeModal(); renderApps(); renderDash(); fillAppSel();
+}
+
+/* ============ API Keys ============ */
+const EYE_ON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
+let masterShown = false;
+function updateMasterUI() {
+  el('masterVal').classList.toggle('key-hidden', !masterShown);
+  el('masterVal').textContent = masterShown ? ME.apiKey : '••••••••••••••••••••••••••••';
+  el('masterCopy').style.display = masterShown ? 'inline-flex' : 'none';
+  el('masterToggle').innerHTML = masterShown ? EYE_OFF : EYE_ON;
+}
+function toggleMaster() { masterShown = !masterShown; updateMasterUI(); }
+function copyMaster() { if (!masterShown) return; copyText(ME.apiKey, el('masterCopy')); }
+
+function keyRow(k) {
+  const exp = k.expiresAt ? 'exp ' + fmt.time(k.expiresAt) : t('forever');
+  return `<div class="key-row">
+    <div class="kid">${esc(k.id.slice(-8))}</div>
+    <div class="key-val">${esc(k.value)}</div>
+    <span class="exp">${esc(exp)}</span>
+    ${statusBadge(k.kind === 'owner' ? 'owner' : k.status)}
+    <div class="act">
+      <button class="btn-sm" onclick="copyText('${esc(k.value)}', this)">${t('copy')}</button>
+      <button class="btn-sm" onclick="rotateKey('${k.id}')">${t('rotate')}</button>
+      <button class="btn-sm" onclick="revokeKeyF('${k.id}')">${t('revoke')}</button>
+      <button class="btn-sm danger" onclick="deleteKey('${k.id}')">${t('delete')}</button>
+    </div>
+  </div>`;
+}
+
+function renderKeys() {
+  const keys = Keys.all();
+  const list = el('keyList');
+  masterShown = false;
+  updateMasterUI();
+  if (!keys.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>${t('no_keys_live')}</div>`;
+    return;
+  }
+  list.innerHTML = keys.map(keyRow).join('');
+}
+
+function openKeyModal() {
+  const apps = Apps.all();
+  el('modalRoot').classList.add('show');
+  el('modalBox').innerHTML = `
+    <h2>${t('gen_key_title')}</h2>
+    <div class="m-row">
+      <div class="input-group">
+        <label>${t('key_type')}</label>
+        <select class="input" id="mKeyKind">
+          <option value="basic">${t('basic_key')}</option>
+          <option value="live">${t('live_key')}</option>
+          <option value="owner">${t('owner_key')}</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>${t('duration')}</label>
+        <select class="input" id="mKeyDur">
+          ${durOpts()}
+        </select>
+      </div>
+    </div>
+    <div class="input-group">
+      <label>${t('attach_app')}</label>
+      <select class="input" id="mKeyApp">
+        <option value="">${t('global')}</option>
+        ${apps.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="createKey()">${t('create')}</button>
+      <button class="btn btn-ghost" onclick="closeModal()">${t('cancel')}</button>
+    </div>`;
+}
+
+function createKey() {
+  const kind = el('mKeyKind').value;
+  const dur = el('mKeyDur').value;
+  const appId = el('mKeyApp').value || null;
+  const res = Keys.generate(kind, appId, dur);
+  if (!res.ok) return toast(res.msg, 'error');
+  const k = res.key;
+  toast(t('key_generated'), 'ok');
+  closeModal(); renderKeys(); renderDash();
+  setTimeout(() => {
+    el('modalRoot').classList.add('show');
+    el('modalBox').innerHTML = `
+      <h2>${t('key_generated_title')}</h2>
+      <div class="key-box" style="margin-bottom:12px"><code>${esc(k.value)}</code>
+        <button class="copy-btn" onclick="copyText('${esc(k.value)}', this)">${t('copy')}</button></div>
+      <div class="swid-box"><div class="swid-head"><span>HWID <span class="badge-live">● ${t('live')}</span></span></div>
+        <div class="swid-body">${esc(k.swid.fingerprint)}</div></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">${t('done')}</button></div>`;
+  }, 200);
+}
+
+function rotateKey(id) {
+  const k = Keys.rotate(id);
+  if (k) { toast(t('key_rotated'), 'ok'); renderKeys(); renderDash(); }
+}
+function revokeKeyF(id) {
+  if (!confirm(t('confirm_revoke'))) return;
+  Keys.revoke(id); toast(t('key_revoked'), 'ok'); renderKeys(); renderDash();
+}
+function deleteKey(id) {
+  if (!confirm(t('confirm_del_key'))) return;
+  Keys.remove(id); toast(t('key_deleted'), 'ok'); renderKeys(); renderDash();
+}
+
+/* ============ Users / Licenses ============ */
+function fillAppSel() {
+  const sel = el('uAppSel');
+  const apps = Apps.all();
+  sel.innerHTML = `<option value="">— All apps —</option>` +
+    apps.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+}
+
+async function renderUsers() {
+  const sel = el('uAppSel');
+  const appId = sel.value || null;
+  const panel = el('userPanel');
+
+  let list;
+  if (SERVER_ONLINE && appId) {
+    const app = Apps.get(appId);
+    await svc('api/bootstrap', jsonOpts('POST', { key: ME.apiKey, appid: app.appId, appname: app.name }));
+    const j = await svc('api/licenses?appid=' + encodeURIComponent(app.appId), { headers: { 'x-api-key': ME.apiKey } });
+    list = (j.list || []).map(x => normalizeFromServer(x));
+  } else if (SERVER_ONLINE && !appId) {
+    list = [];
+  } else {
+    list = Licenses.all(appId || undefined);
+  }
+
+  if (!list.length) {
+    panel.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>${t('no_users')}</div>`;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="table-wrap">
+      <table class="ix">
+        <thead><tr>
+          <th>${t('th_username')}</th><th>${t('th_type')}</th><th>${t('th_license')}</th><th>${t('th_expires')}</th><th>${t('th_hwid')}</th><th>${t('th_status')}</th><th>${t('th_device')}</th><th>${t('th_actions')}</th>        </tr></thead>
+        <tbody>${list.map(userRow).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function normalizeFromServer(x) {
+  return {
+    id: x.id, username: x.username, type: x.type || 'user',
+    licenseKey: x.license_key || x.licenseKey,
+    passwordPlain: x.password || x.passwordPlain || null,
+    duration: x.duration || 'permanent',
+    expiresAt: x.expires_at || x.expiresAt || null,
+    hwid: x.hwid || null,
+    hwidLocked: x.hwid_locked === 0 ? false : (x.hwidLocked !== false),
+    banned: !!x.banned,
+    lastLogin: x.last_login || null
+  };
+}
+const LOCK_ICON = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+function userRow(l) {
+  const status = l.banned ? 'reset' : Licenses.ticketStatus(l);
+  const hwid = l.hwid ? esc(l.hwid.slice(0, 10)) + '…' : '<span style="color:#56566a">—</span>';
+  const lock = l.hwidLocked === false
+    ? '<span class="k-badge" style="background:rgba(255,255,255,.05);color:#7d7d96;border:1px solid rgba(255,255,255,.09)">' + t('device_any') + '</span>'
+    : '<span class="k-badge" style="background:rgba(37,208,255,.12);color:var(--accent-3);border:1px solid rgba(37,208,255,.25);display:inline-flex;align-items:center;gap:5px">' + LOCK_ICON + t('device_one') + '</span>';
+  const expires = l.expiresAt ? fmt.time(l.expiresAt) : '<span class="k-badge forever">FOREVER</span>';
+  // For a user: show username + password (click to copy). For a license: just the key on one line.
+  const isUser = l.type !== 'license';
+  const credCell = isUser
+    ? '<span class="mono copiable" title="username — click to copy" onclick="copyText(\'' + esc(l.username) + '\')">' + esc(l.username) + '</span>'
+      + '<span style="color:#56566a;margin:0 3px">/</span>'
+      + (l.passwordPlain
+          ? '<span class="mono copiable" title="password — click to copy" onclick="copyText(\'' + esc(l.passwordPlain) + '\')">' + esc(l.passwordPlain) + '</span>'
+          : '<span class="mono" style="color:#56566a">••••</span>')
+    : '<span class="mono copiable" title="license key — click to copy" onclick="copyText(\'' + esc(l.licenseKey) + '\')">' + esc(l.licenseKey) + '</span>';
+  return `<tr>
+    <td><b>${esc(l.username)}</b>${isUser ? '' : ' <span class="k-badge owner">' + t('license_key') + '</span>'}</td>
+    <td>${isUser ? 'user/pass' : t('license_key')}</td>
+    <td>${credCell}</td>
+    <td>${expires}</td>
+    <td class="mono">${hwid}</td>
+    <td>${statusBadge(status)}</td>
+    <td style="white-space:nowrap">${lock}</td>
+    <td><div class="act">
+      <button class="btn-sm" title="copy" onclick="copyText('${esc(isUser ? (l.passwordPlain || l.username) : l.licenseKey)}')">${t('copy')}</button>
+      <button class="btn-sm" title="HWID reset" onclick="resetHWIDF('${l.id}')">HWID</button>
+      <button class="btn-sm" title="renew / extend" onclick="openRenewModal('${l.id}')">${t('renew')}</button>
+      <button class="btn-sm ${l.banned ? '' : 'danger'}" onclick="toggleBanF('${l.id}', ${l.banned ? 'false' : 'true'})">${l.banned ? t('unban') : t('ban')}</button>
+      <button class="btn-sm danger" onclick="deleteUserF('${l.id}')">✕</button>
+    </div></td>
+  </tr>`;
+}
+
+/* ============ Calendar expiry picker ============ */
+let PICK = {};
+function durPickerHTML(prefix) {
+  return `
+    <div class="input-group">
+      <label>${t('expiry')}</label>
+      <select class="input" id="${prefix}Dur">${durOpts()}</select>
+      <input type="date" class="input dur-date" id="${prefix}Until" onchange="durDate('${prefix}')">
+      <p class="dur-hint">${t('expiry_hint')}</p>
+    </div>`;
+}
+function durDate(prefix) {
+  const v = (el(prefix + 'Until') || {}).value;
+  if (v) { const y = +v.slice(0, 4), mo = +v.slice(5, 7) - 1, da = +v.slice(8, 10); PICK[prefix] = new Date(y, mo, da, 23, 59, 59).getTime(); }
+  else PICK[prefix] = undefined;
+}
+function pickUntil(prefix) {
+  const p = PICK[prefix];
+  if (p === null) return { duration: 'permanent', until: null };
+  if (typeof p === 'number') return { duration: 'until-date', until: p };
+  return { duration: el(prefix + 'Dur').value, until: null };
+}
+
+function openUserModal(type) {
+  const appId = el('uAppSel').value;
+  if (!appId) { toast(t('need_app'), 'error'); return; }
+  if (SERVER_ONLINE) { openUserModalServer(type); return; }
+  const app = Apps.get(appId);
+  el('modalRoot').classList.add('show');
+  el('modalBox').innerHTML = `
+    <h2>${type === 'license' ? t('new_license_title') : t('new_user_title')}</h2>
+    ${type === 'user' ? `
+      <div class="m-row">
+        <div class="input-group"><label>${t('username')}</label><input class="input" id="uName" placeholder="user123"></div>
+        <div class="input-group"><label>${t('password')}</label><input class="input" id="uPass" placeholder="pass123"></div>
+      </div>` : `
+      <div class="input-group"><label>${t('label_opt')}</label><input class="input" id="uName" placeholder="key1"></div>`}
+    <div class="input-group"><label>${t('hwid_opt')}</label><input class="input" id="uHwid" placeholder="${t('leave_empty')}"></div>
+    <label class="hwidlock"><input type="checkbox" id="uLock" checked> <span><b>${t('hwid_lock')}</b> — ${t('hwid_lock_hint')}</span></label>
+    ${durPickerHTML('u')}
+    <p style="color:var(--text-dim);font-size:12px">${t('app')}: ${esc(app.name)} · connected to the live key.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="createUserLocal('${type}','${appId}')">${t('create')}</button>
+      <button class="btn btn-ghost" onclick="closeModal()">${t('cancel')}</button>
+    </div>`;
+}
+
+function createUserLocal(type, appId) {
+  const p = pickUntil('u');
+  const res = Licenses.create({
+    appId,
+    username: el('uName').value || (type === 'license' ? 'key-' + Crypto.token(3).toLowerCase() : ''),
+    password: type === 'user' ? el('uPass').value : null,
+    duration: p.duration,
+    untilMs: p.until,
+    hwid: el('uHwid').value || null,
+    hwidLock: el('uLock').checked,
+    isLicense: type === 'license'
+  });
+  if (!res.ok) return toast(res.msg, 'error');
+  toast(type === 'license' ? t('created_license') : t('created_user'), 'ok');
+  closeModal(); renderUsers();
+}
+
+function resetHWIDF(id) {
+  const appId = el('uAppSel').value;
+  if (SERVER_ONLINE && appId) {
+    const app = Apps.get(appId);
+    svc('api/license/resethwid', jsonOpts('POST', { key: ME.apiKey, appid: app.appId, id })).then(j => {
+      toast(j.ok ? t('hwid_reset') : (j.message || t('invalid')), j.ok ? 'ok' : 'error'); renderUsers();
+    });
+    return;
+  }
+  const l = Licenses.resetHWID(id);
+  if (l) { toast(t('hwid_reset'), 'ok'); renderUsers(); }
+}
+
+function openRenewModal(id) {
+  el('modalRoot').classList.add('show');
+  el('modalBox').innerHTML = `
+    <h2>${t('renew_title')}</h2>
+    ${durPickerHTML('r')}
+    <div class="modal-actions">
+      <button class="btn" onclick="doRenew('${id}')">${t('renew')}</button>
+      <button class="btn btn-ghost" onclick="closeModal()">${t('cancel')}</button>
+    </div>`;
+}
+function doRenew(id) {
+  const p = pickUntil('r');
+  const appId = el('uAppSel').value;
+  if (SERVER_ONLINE && appId) {
+    const app = Apps.get(appId);
+    svc('api/license/renew', jsonOpts('POST', { key: ME.apiKey, appid: app.appId, id, duration: p.duration, until: p.until })).then(j => {
+      toast(j.ok ? t('renewed') : (j.message || t('invalid')), j.ok ? 'ok' : 'error'); closeModal(); renderUsers();
+    });
+    return;
+  }
+  const l = Licenses.renew(id, p.duration, p.until);
+  if (l) { toast(t('renewed'), 'ok'); closeModal(); renderUsers(); }
+}
+
+function toggleBanF(id, banned) {
+  const appId = el('uAppSel').value;
+  if (SERVER_ONLINE && appId) {
+    const app = Apps.get(appId);
+    svc('api/license/ban', jsonOpts('POST', { key: ME.apiKey, appid: app.appId, id, banned })).then(j => {
+      toast(j.ok ? (banned ? t('banned') : t('unbanned')) : (j.message || t('invalid')), j.ok ? 'ok' : 'error'); renderUsers();
+    });
+    return;
+  }
+  const l = Licenses.setStatus(id, banned);
+  if (l) { toast(banned ? t('banned') : t('unbanned'), 'ok'); renderUsers(); }
+}
+
+function deleteUserF(id) {
+  if (!confirm(t('delete'))) return;
+  const appId = el('uAppSel').value;
+  if (SERVER_ONLINE && appId) {
+    const app = Apps.get(appId);
+    svc('api/license/' + id, jsonOpts('DELETE', { key: ME.apiKey, appid: app.appId, id })).then(j => {
+      toast(j.ok ? t('deleted') : (j.message || t('invalid')), j.ok ? 'ok' : 'error'); renderUsers();
+    });
+    return;
+  }
+  Licenses.remove(id); toast(t('deleted'), 'ok'); renderUsers();
+}
+
+function openUserModalServer(type) {
+  const app = Apps.get(el('uAppSel').value);
+  el('modalRoot').classList.add('show');
+  el('modalBox').innerHTML = `
+    <h2>${type === 'license' ? t('new_license_title') : t('new_user_title')} · live DB</h2>
+    ${type === 'user' ? `
+      <div class="m-row">
+        <div class="input-group"><label>${t('username')}</label><input class="input" id="sName" placeholder="user123"></div>
+        <div class="input-group"><label>${t('password')}</label><input class="input" id="sPass" placeholder="pass123"></div>
+      </div>` : `
+      <div class="input-group"><label>${t('label_opt')}</label><input class="input" id="sName" placeholder="key1"></div>`}
+    <label class="hwidlock"><input type="checkbox" id="sLock" checked> <span><b>${t('hwid_lock')}</b> — ${t('hwid_lock_hint')}</span></label>
+    ${durPickerHTML('s')}
+    <div class="modal-actions">
+      <button class="btn" onclick="createUserServer('${type}')">${t('create')}</button>
+      <button class="btn btn-ghost" onclick="closeModal()">${t('cancel')}</button>
+    </div>`;
+}
+function createUserServer(type) {
+  const app = Apps.get(el('uAppSel').value);
+  const p = pickUntil('s');
+  const body = {
+    key: ME.apiKey, appid: app.appId, username: el('sName').value,
+    password: type === 'user' ? el('sPass').value : null,
+    type, duration: p.duration, until: p.until,
+    lock: el('sLock').checked ? '1' : '0'
+  };
+  svc('api/license', jsonOpts('POST', body)).then(j => {
+    if (!j.ok) return toast(j.message || t('invalid'), 'error');
+    toast(type === 'license' ? t('created_license') : t('created_user'), 'ok');
+    closeModal(); renderUsers();
+  });
+}
+
+/* ============ Installation ============ */
+function appsSel() { const a = Apps.all(); return a.length ? a[0].appId : 'APP-XXXXXX'; }
+
+const CODES = {
+  py: `
+# pip install requests
+import requests
+
+# Put your server address here (wherever python server.py runs)
+SERVER = "http://YOUR-SERVER:3000"
+API_KEY = "${esc(ME.apiKey)}"
+APP_ID  = "${esc(appsSel())}"
+
+def verify(user, password, hwid="my-pc"):
+    r = requests.post(SERVER + "/api/verify", json={
+        "key": API_KEY,
+        "appid": APP_ID,
+        "user": user,
+        "pass": password,
+        "hwid": hwid,
+    })
+    d = r.json()
+    if d.get("success"):
+        print("LOGIN OK @", d.get("expires"))
+        return d
+    print("DENIED: ", d.get("message"))
+    return None
+
+verify("username", "password")`,
+  cs: `
+// C# — .NET (System.Net.Http built-in, no package needed)
+// Full client file: IshuAuth.cs (download the package — AOT safe)
+
+IshuAuth auth = new IshuAuth();
+auth.Server = "http://YOUR-SERVER:3000";     // your server goes here
+auth.ApiKey = "${esc(ME.apiKey)}";
+auth.AppId  = "${esc(appsSel())}";
+
+// 1) user + password login   (user created in the panel)
+// 2) or license key login    (user = key, pass = key)
+string hwid = "PC-FINGERPRINT";             // device id
+
+var res = await auth.Verify("user123", "pass123", hwid);
+if (res.Success) Console.WriteLine("LOGIN OK @ " + res.Expires);
+else Console.WriteLine("DENIED: " + res.Message);
+
+// Extra control — the same as the panel, from C#:
+// await auth.Create("user2", "pass2", "30d", "user");
+// await auth.ResetHwid(licenseId);
+// await auth.Renew(licenseId, "7d");          // or "permanent"
+// await auth.Renew(licenseId, null, untilMs); // exact date
+// await auth.Ban(licenseId, true);`,
+  js: `
+// Node.js / browser fetch
+const SERVER = "http://YOUR-SERVER:3000";
+const API_KEY = "${esc(ME.apiKey)}";
+const APP_ID  = "${esc(appsSel())}";
+
+fetch(SERVER + "/api/verify", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ key: API_KEY, appid: APP_ID, user: "username", pass: "password", hwid: "my-pc" })
+})
+  .then(r => r.json())
+  .then(d => d.success ? console.log("LOGIN OK @", d.expires)
+                        : console.log("DENIED: ", d.message));`,
+  gen: `
+POST http://YOUR-SERVER:3000/api/verify
+Content-Type: application/json
+
+{
+  "key":   "${esc(ME.apiKey)}",
+  "appid": "${esc(appsSel())}",
+  "user":  "username",
+  "pass":  "password",
+  "hwid":  "my-pc"
+}
+
+=> 200 OK
+{
+  "success": true,
+  "message": "valid",
+  "expires": "2026-09-09 12:00",
+  "hwid": "my-pc"
+}`
+};
+
+function renderInstall() {
+  const tabs = el('codeTabs');
+  const box = el('codeBlocks');
+  const active = document.querySelector('#codeTabs .tab-btn.active').dataset.tab;
+  box.innerHTML = `<div class="code-block"><span class="cp">
+    <button class="copy-btn" onclick="copyText(atob('${btoa(CODES[active])}'), this)">COPY</button></span>
+    ${CODES[active]}</div>`;
+  tabs.querySelectorAll('.tab-btn').forEach(t => {
+    t.onclick = () => {
+      tabs.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      renderInstall();
+    };
+  });
+}
+
+/* ============ Modal helpers ============ */
+function closeModal() { el('modalRoot').classList.remove('show'); }
+el('modalRoot').addEventListener('click', e => { if (e.target === el('modalRoot')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ============ Settings page ============ */
+const SWATCH_COLORS = [
+  { id: 'orange', hex: '#ff4d2e' }, { id: 'red', hex: '#e11d48' }, { id: 'blue', hex: '#2563eb' },
+  { id: 'green', hex: '#10b981' }, { id: 'purple', hex: '#8b5cf6' }, { id: 'yellow', hex: '#eab308' },
+  { id: 'cyan', hex: '#06b6d4' }, { id: 'pink', hex: '#ec4899' }
+];
+function renderSettings() {
+  const cfg = Settings.cfg();
+  const root = el('settingsRoot');
+  if (!root) return;
+  let langBtns = '';
+  Object.keys(Settings.LANGS).forEach(code => {
+    langBtns += `<button class="lang-btn${cfg.lang === code ? ' on' : ''}" onclick="setLang('${code}')">${Settings.LANGS[code]}</button>`;
+  });
+  let themeBtns = '';
+  Object.keys(Settings.THEMES).forEach(id => {
+    const th = Settings.THEMES[id];
+    themeBtns += `<div class="theme-card${cfg.theme === id ? ' on' : ''}" onclick="setTheme('${id}')">
+      <div class="theme-swatch" style="background:radial-gradient(circle at 25% 20%, ${th.c1}, ${th.c2}), ${th.bg}"></div>
+      <div class="theme-name">${th.name}</div></div>`;
+  });
+  let colorBtns = '';
+  SWATCH_COLORS.forEach(c => {
+    colorBtns += `<button class="swatch${cfg.accent === c.id ? ' on' : ''}" title="${c.id}" style="background:${c.hex}" onclick="setAccent('${c.id}')"></button>`;
+  });
+  root.innerHTML = `
+    <div class="setting-card">
+      <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span data-i18n="lang_title">Language</span></h3>
+      <p class="set-sub" data-i18n="lang_sub">Choose the language for the entire panel.</p>
+      <div class="lang-grid">${langBtns}</div>
+    </div>
+    <div class="setting-card">
+      <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> <span data-i18n="theme_title">Theme</span></h3>
+      <p class="set-sub" data-i18n="theme_sub">Pick a preset background — the default keeps the original look until you change it.</p>
+      <div class="theme-grid">${themeBtns}</div>
+    </div>
+    <div class="setting-card">
+      <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9c0-1-.1-2-.3-3"/><circle cx="12" cy="12" r="3"/></svg> <span data-i18n="color_title">Accent Color</span></h3>
+      <p class="set-sub" data-i18n="color_sub">Change the theme colour of the whole panel.</p>
+      <div class="swatch-row">${colorBtns}</div>
+    </div>
+    <div class="setting-card" style="display:flex;flex-direction:column;gap:10px;justify-content:center">
+      <button class="btn btn-ghost-danger" onclick="resetAllSettings()"><span data-i18n="reset_all">Reset All Settings</span></button>
+    </div>`;
+}
+function setLang(code) {
+  Settings.set({ lang: code });
+  toast(Tr(code, 'saved'), 'ok');
+}
+function setTheme(id) {
+  Settings.set({ theme: id });
+  renderSettings(); toast(t('saved'), 'ok');
+}
+function setAccent(id) {
+  Settings.set({ accent: id });
+  renderSettings(); toast(t('saved'), 'ok');
+}
+function resetAllSettings() { Settings.set({ lang: 'en', theme: 'void', accent: 'orange' }); renderSettings(); toast(t('saved'), 'ok'); }
+
+/* re-render all dynamic templates (on language change) */
+window.renderAll = function () {
+  [renderDash, fillAppSel, renderApps, renderKeys, renderUsers, renderInstall].forEach(fn => {
+    try { fn(); } catch (e) { console.error('renderAll:', e); }
+  });
+};
+
+/* ============ Init ============ */
+Apps.ensureDefault();
+Settings.load();
+Settings.applyColor();
+Settings.applyTheme();
+// step-by-step so one failure can never freeze the whole panel
+[renderDash, fillAppSel, renderApps, renderKeys, renderUsers, renderInstall, renderSettings, typeLoop].forEach(fn => {
+  try { fn(); } catch (e) { console.error('init:', e); }
+});
+pingServer();
+</script>
+</body>
+</html>
