@@ -200,7 +200,7 @@ body {
 }
 .auth-logo p {
   font-family: 'Orbitron', monospace;
-  color: var(--text-dim);
+  color: #e2e3f2;
   font-size: 9px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -281,7 +281,7 @@ body {
   text-align: center;
   margin-top: 22px;
   font-size: 13px;
-  color: var(--text-dim);
+  color: #d0d1e6;
   font-family: 'Poppins', 'Rajdhani', sans-serif;
   font-weight: 500;
 }
