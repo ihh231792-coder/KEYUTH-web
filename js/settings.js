@@ -38,7 +38,7 @@ const LANGS = { en: 'English', hi: 'Hindi', ur: 'Urdu', bn: 'Bangla', ta: 'Tamil
 /* ---------- the engine ---------- */
 const Settings = (function () {
   const KEY = 'ishu.settings.v1';
-  let cfg = { lang: 'en', theme: 'void', accent: 'orange' };
+  let cfg = { lang: 'en', theme: 'void', accent: 'orange', server: 'http://localhost:3000' };
 
   function load() {
     try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); cfg = Object.assign(cfg, s); }
@@ -151,6 +151,8 @@ const MSG = (function () {
     color_title: 'Accent Color', color_sub: 'Change the theme colour of the whole panel.',
     reset_all: 'Reset All Settings',
     saved: 'Settings saved.',
+    server_url: 'Server URL', server_url_hint: 'Where your ISHU AUTH API runs — after deploying it online, paste the public URL here (e.g. https://your-app.onrender.com). The panel and your apps verify against this server.',
+    update: 'Update',
     // install page
     install_title: 'INSTALLATION', install_sub: 'Connect your app, bot or software to ISHU AUTH — no packages to install.',
     how_works: 'How it works',
@@ -234,6 +236,9 @@ const MSG = (function () {
     as:{new_app:'+ নতুন এপ',new_app_name:'এপৰ নাম',username:'ব্যৱহাৰকাৰীৰ নাম',password:'পাছৱৰ্ড',login:'লগইন',no_account:'একাউণ্ট নাই?',register:'পজিচ্টাৰ',create_account:'একাউণ্ট সৃষ্টি কৰক',choose_username:'ব্যৱহাৰকাৰীৰ নাম বাছনি',create_password:'পাছৱৰ্ড সৃষ্টি কৰক',already_registered:'ইতিমধ্যে পজিচ্টাৰ?'}
   };
   Object.keys(_login).forEach(function(k){ L[k]=Object.assign(L[k]||{}, _login[k]); });
+  L.hi = Object.assign(L.hi || {}, {
+    server_url: 'सर्वर पता', server_url_hint: 'आपका ISHU AUTH API कहां चलता है — ऑनलाइन deploy करने के बाद public URL यहां पेस्ट करें। पैनल और आपके ऐप इसी सर्वर से verify करते हैं।', update: 'अपडेट'
+  });
 
   function get(lang, key) {
     const cat = L[lang] || {};

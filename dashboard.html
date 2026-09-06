@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=18">
 </head>
 <body>
 
@@ -229,8 +229,8 @@
 .toast.out { opacity: 0; transform: translateX(30px); }
 </style>
 
-<script src="js/core.js?v=13"></script>
-<script src="js/settings.js?v=13"></script>
+<script src="js/core.js?v=18"></script>
+<script src="js/settings.js?v=18"></script>
 <script>
 const ME = (function () {
   const u = Auth.current();
@@ -238,11 +238,15 @@ const ME = (function () {
   return u;
 })();
 
+/* API server address — set it from Settings → Server URL (public cloud URL).
+   Default keeps working while the panel is served by server.py itself. */
+let API_BASE = (Settings.cfg().server || 'http://localhost:3000').replace(/\/+$/, '');
+
 /* ============ Server detection ============ */
 let SERVER_ONLINE = false;
 async function pingServer() {
   try {
-    const r = await fetch('api/ping', { cache: 'no-store' });
+    const r = await fetch(API_BASE + '/api/ping', { cache: 'no-store' });
     const j = await r.json();
     SERVER_ONLINE = !!(j && j.ok);
   } catch (e) { SERVER_ONLINE = false; }
@@ -254,7 +258,7 @@ async function pingServer() {
 }
 async function svc(path, opts) {
   try {
-    const r = await fetch(path, opts);
+    const r = await fetch(API_BASE + '/' + path.replace(/^\//, ''), opts);
     let j; try { j = await r.json(); } catch (e) { j = { ok: false, message: 'bad response' }; }
     return j;
   } catch (e) { return { ok: false, message: 'server unreachable' }; }
@@ -831,7 +835,7 @@ const CODES = {
 import requests
 
 # Put your server address here (wherever python server.py runs)
-SERVER = "http://YOUR-SERVER:3000"
+SERVER = "${API_BASE}"
 API_KEY = "${esc(ME.apiKey)}"
 APP_ID  = "${esc(appsSel())}"
 
@@ -856,7 +860,7 @@ verify("username", "password")`,
 // Full client file: IshuAuth.cs (download the package — AOT safe)
 
 IshuAuth auth = new IshuAuth();
-auth.Server = "http://YOUR-SERVER:3000";     // your server goes here
+auth.Server = "${API_BASE}";     // your server goes here
 auth.ApiKey = "${esc(ME.apiKey)}";
 auth.AppId  = "${esc(appsSel())}";
 
@@ -876,7 +880,7 @@ else Console.WriteLine("DENIED: " + res.Message);
 // await auth.Ban(licenseId, true);`,
   js: `
 // Node.js / browser fetch
-const SERVER = "http://YOUR-SERVER:3000";
+const SERVER = "${API_BASE}";
 const API_KEY = "${esc(ME.apiKey)}";
 const APP_ID  = "${esc(appsSel())}";
 
@@ -889,7 +893,7 @@ fetch(SERVER + "/api/verify", {
   .then(d => d.success ? console.log("LOGIN OK @", d.expires)
                         : console.log("DENIED: ", d.message));`,
   gen: `
-POST http://YOUR-SERVER:3000/api/verify
+POST ${API_BASE}/api/verify
 Content-Type: application/json
 
 {
@@ -971,6 +975,14 @@ function renderSettings() {
       <p class="set-sub" data-i18n="color_sub">Change the theme colour of the whole panel.</p>
       <div class="swatch-row">${colorBtns}</div>
     </div>
+    <div class="setting-card">
+      <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span data-i18n="server_url">Server URL</span></h3>
+      <p class="set-sub" data-i18n="server_url_hint">Where your ISHU AUTH API runs — after deploying it online, paste the public URL here.</p>
+      <div class="m-row" style="margin-top:8px">
+        <input class="input" id="srvUrlInp" value="${esc(API_BASE)}" placeholder="https://your-app.onrender.com" style="flex:1">
+        <button class="btn" style="padding:12px 20px" onclick="saveServerUrl()">${t('update')}</button>
+      </div>
+    </div>
     <div class="setting-card" style="display:flex;flex-direction:column;gap:10px;justify-content:center">
       <button class="btn btn-ghost-danger" onclick="resetAllSettings()"><span data-i18n="reset_all">Reset All Settings</span></button>
     </div>`;
@@ -988,6 +1000,16 @@ function setAccent(id) {
   renderSettings(); toast(t('saved'), 'ok');
 }
 function resetAllSettings() { Settings.set({ lang: 'en', theme: 'void', accent: 'orange' }); renderSettings(); toast(t('saved'), 'ok'); }
+
+function saveServerUrl() {
+  const v = (el('srvUrlInp').value || '').trim().replace(/\/+$/, '');
+  if (!v) return toast('Server URL required', 'error');
+  Settings.set({ server: v });
+  API_BASE = v;
+  renderInstall();
+  pingServer();
+  toast(t('saved'), 'ok');
+}
 
 /* re-render all dynamic templates (on language change) */
 window.renderAll = function () {
