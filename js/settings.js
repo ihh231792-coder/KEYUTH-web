@@ -174,7 +174,7 @@ const MSG = (function () {
     create_password: 'create password', already_registered: 'Already registered?',
     welcome_back: 'Welcome back, ', account_created: 'Account created — welcome ',
     continue_google: 'Continue with Google',
-    or_use: 'or use your password',
+    or_use: 'or login with',
     google_setup: 'Google login not configured yet — put your Google Client ID in index.html (GOOGLE_CLIENT_ID).',
     google_offline: 'No internet — Google Sign-In needs a connection.',
     google_failed: 'Google sign-in failed. Please try again.',
@@ -220,7 +220,7 @@ const MSG = (function () {
 
   // ---- login-page + create-app keys (all 12 languages) ----
   var _login={
-    hi:{new_app:'+ नया ऐप',new_app_name:'ऐप का नाम',username:'यूज़रनेम',password:'पासवर्ड',login:'लॉगिन',no_account:'अकाउंट नहीं?',register:'रजिस्टर',create_account:'अकाउंट बनाएं',choose_username:'यूज़रनेम चुनें',create_password:'पासवर्ड बनाएं',already_registered:'पहले से रजिस्टर्ड?',continue_google:'Google से जारी रखें',or_use:'या अपना पासवर्ड इस्तेमाल करें',google_setup:'Google लॉगिन सेट नहीं है — index.html में अपना Google Client ID (GOOGLE_CLIENT_ID) डालें।',google_offline:'कोई इंटरनेट नहीं — Google साइन-इन के लिए कनेक्शन चाहिए।',google_failed:'Google साइन-इन विफल। फिर से कोशिश करें।'},
+    hi:{new_app:'+ नया ऐप',new_app_name:'ऐप का नाम',username:'यूज़रनेम',password:'पासवर्ड',login:'लॉगिन',no_account:'अकाउंट नहीं?',register:'रजिस्टर',create_account:'अकाउंट बनाएं',choose_username:'यूज़रनेम चुनें',create_password:'पासवर्ड बनाएं',already_registered:'पहले से रजिस्टर्ड?',continue_google:'Google से जारी रखें',or_use:'या लॉगिन करें',google_setup:'Google लॉगिन सेट नहीं है — index.html में अपना Google Client ID (GOOGLE_CLIENT_ID) डालें।',google_offline:'कोई इंटरनेट नहीं — Google साइन-इन के लिए कनेक्शन चाहिए।',google_failed:'Google साइन-इन विफल। फिर से कोशिश करें।'},
     ur:{new_app:'+ نیا ایپ',new_app_name:'ایپ کا نام',username:'صارف نام',password:'پاس ورڈ',login:'لاگ ان',no_account:'اکاؤنٹ نہیں?',register:'رجسٹر',create_account:'اکاؤنٹ بنائیں',choose_username:'صارف نام چنیں',create_password:'پاس ورڈ بنائیں',already_registered:'پہلے سے رجسٹرڈ?'},
     bn:{new_app:'+ নতুন অ্যাপ',new_app_name:'অ্যাপের নাম',username:'ব্যবহারকারীর নাম',password:'পাসওয়ার্ড',login:'লগইন',no_account:'অ্যাকাউন্ট নেই?',register:'নিবন্ধন',create_account:'অ্যাকাউন্ট তৈরি',choose_username:'ব্যবহারকারীর নাম বাছাই',create_password:'পাসওয়ার্ড তৈরি',already_registered:'ইতিমধ্যে নিবন্ধিত?'},
     ta:{new_app:'+ புதிய ஆப்',new_app_name:'ஆப் பெயர்',username:'பயனர் பெயர்',password:'கடவுச்சொல்',login:'உள்நுழைவு',no_account:'கணக்கு இல்லை?',register:'பதிவு',create_account:'கணக்கு உருவாக்கு',choose_username:'பயனர் பெயரைத் தேர்ந்தெடு',create_password:'கடவுச்சொல்லை உருவாக்கு',already_registered:'ஏற்கனவே பதிவு செய்துள்ளது?'},
