@@ -3,13 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ISHU AUTH - Sign In</title>
+<title>ISHU AUTH | Key &amp; License Management System - Sign In</title>
+<meta name="description" content="ISHU AUTH - Premium key &amp; license management panel. Login with Google, manage API keys, users and licenses, HWID lock, key rotation, renew and ban - all in one control panel.">
+<meta name="keywords" content="ISHU AUTH, key system, license system, API keys, HWID lock, key management, license management, authentication panel">
+<meta name="author" content="ISHU">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ISHU AUTH | Key &amp; License Management System">
+<meta property="og:description" content="Premium key &amp; license management panel - Google login, API keys, users, licenses, HWID lock and more.">
+<meta property="og:url" content="https://ihh231792-coder.github.io/KEYUTH-web/">
+<meta property="og:image" content="https://ihh231792-coder.github.io/KEYUTH-web/logo.png">
+<meta property="og:site_name" content="ISHU AUTH">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ISHU AUTH | Key &amp; License Management System">
+<meta name="twitter:description" content="Premium key &amp; license management panel - Google login, API keys, users, licenses, HWID lock and more.">
+<meta name="twitter:image" content="https://ihh231792-coder.github.io/KEYUTH-web/logo.png">
+<link rel="canonical" href="https://ihh231792-coder.github.io/KEYUTH-web/">
 <link rel="icon" type="image/png" href="logo.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"ISHU AUTH","url":"https://ihh231792-coder.github.io/KEYUTH-web/","logo":"https://ihh231792-coder.github.io/KEYUTH-web/logo.png","description":"ISHU AUTH - Premium key &amp; license management panel with Google login, API keys, users, licenses and HWID lock.","applicationCategory":"UtilitiesApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"INR"}}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<link rel="stylesheet" href="css/style.css?v=10">
+<link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body class="auth-body">
 
@@ -64,12 +83,12 @@
   </div>
 
   <div class="auth-status" style="padding:16px 6px 0;justify-content:center">
-    <span data-i18n="copyright">v1.0 &middot; Copyrighted by ISHU</span>
+    <span data-i18n="copyright">© v1.0 &middot; Copyrighted by ISHU</span>
   </div>
 </div>
 
-<script src="js/core.js?v=10"></script>
-<script src="js/settings.js?v=10"></script>
+<script src="js/core.js?v=11"></script>
+<script src="js/settings.js?v=11"></script>
 <script>
 /* ===== login page language select (14 langs) ===== */
 function onLoginLang(code) {
@@ -113,6 +132,8 @@ function initGoogle() {
     ux_mode: 'popup',
     auto_select: false
   });
+  google.accounts.id.disableAutoSelect();
+  google.accounts.id.cancel();
   google.accounts.id.renderButton(document.getElementById('gGoing'), {
     theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', width: 300
   });
