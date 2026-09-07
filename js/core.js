@@ -372,7 +372,7 @@ const DURATIONS = [
 const durOpts = () => DURATIONS.map(d => `<option value="${d.id}">${d.label}</option>`).join('');
 const durLabel = id => { const d = DURATIONS.find(x => x.id === id); return d ? d.label : (id === 'until-date' ? 'Custom Date' : id); };
 
-/* ---------- Licenses (KeyAuth-style user control) ---------- */
+/* ---------- Licenses (ISHU AUTH user control) ---------- */
 const Licenses = {
   durMs(id) {
     const d = DURATIONS.find(x => x.id === id);

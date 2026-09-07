@@ -268,7 +268,7 @@ class Handler(SimpleHTTPRequestHandler):
         con.close()
         return bool(owner)
 
-    # KeyAuth-style: {ownerid, secret, name} instead of {key, appid}
+    # ISHU AUTH: {ownerid, secret, name} instead of {key, appid}
     def _resolve_auth(self, body):
         key = body.get("key"); appid = body.get("appid")
         ownerid = body.get("ownerid"); secret = body.get("secret")

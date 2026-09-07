@@ -1,7 +1,7 @@
 # ISHU AUTH
 
-KeyAuth-style **API Key + License Control Platform** by **ISHU**.
-Unique "HEAT" theme — KeyAuth-style layout with your own accent color.
+ISHU AUTH **API Key + License Control Platform** by **ISHU**.
+Unique "HEAT" theme layout with your own accent color.
 Logo: ISHU · ISHU PREMIUM SECURITY LOCK
 
 ## Run (live DB mode — recommended)
@@ -25,7 +25,7 @@ The panel's **Users** page automatically detects the server and switches to live
 | Applications | **Default app auto-created** (named after your username) · rename with the SVG pencil · Owner ID (click to copy) · Secret ID (blur → reveal + copy) · HWID fingerprint per app |
 | Create Users | Create a user + password or a license key · **HWID Lock** (1 device only — checkbox on/off) · **HWID reset** · renew · ban · expiry via **preset** (permanent/1–90 days/1 year/hours) or **calendar** exact date |
 | Settings | **14 languages** (English + 13 Indian languages) · **Theme** (preset gradients or upload your own background image from gallery/PC/phone) · **Accent color** (orange/red/blue/green/purple/yellow/cyan/pink) · saved in localStorage (works on static hosts like GitHub Pages) |
-| Package | C# SDK (`IshuAuth.cs`) — KeyAuth-style, no package installation |
+| Package | C# SDK (`IshuAuth.cs` + `ISHU_Auth_API.cs`) — no package installation |
 | Installation | C# / Python / JS / HTTP code — paste into your app, login starts |
 
 ## Connect your project (C# / APK / any app)

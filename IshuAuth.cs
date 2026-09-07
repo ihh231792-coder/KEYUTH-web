@@ -1,6 +1,6 @@
 // =============================================================
 //   ISHU AUTH - SDK (C#)  —  drop this file into your project
-//   Author: ISHU · like KeyAuth style, ISHU/server control
+//   Author: ISHU · ISHU AUTH / server-side license control
 // -------------------------------------------------------------
 //   INSTALL:        No package needed. .NET built-in System.Net.Http.
 //   AOT SAFE:       This file uses form-POST (no JSON reflection)

@@ -2,18 +2,18 @@
 //   ISHU AUTH - SDK (C#)  KEYAUTH-STYLE CLASS
 //   Drop this one file into your project. No package needed.
 // -------------------------------------------------------------
-//   USE (same way you use KeyAuth):
-//     public static api KeyAuthApp = new api(
+//   USE (same flow as other auth systems — 4 values, no API key):
+//     public static api IshuAuthApp = new api(
 //         name:    "APP-XXXXXX",       // your app id or app name
 //         ownerid: "YOUR-OWNER-ID",    // panel: Install -> Owner ID
 //         secret:  "SEC-............", // panel: Install -> Secret ID
 //         version: "1.0"
 //     );
 //
-//     KeyAuthApp.init();                                    // session
-//     KeyAuthApp.login(username, password);                 // login
-//     if (KeyAuthApp.response.success)  { /* unlocked */ }
-//     else MessageBox.Show("DENIED: " + KeyAuthApp.response.message);
+//     IshuAuthApp.init();                                    // session
+//     IshuAuthApp.login(username, password);                 // login
+//     if (IshuAuthApp.response.success)  { /* unlocked */ }
+//     else MessageBox.Show("DENIED: " + IshuAuthApp.response.message);
 //
 //   Server is already set to the ISHU AUTH cloud below.
 //   To run on your own server just change:  api.Server = "http://ip:3000";
@@ -35,7 +35,7 @@ namespace ISHU_Auth
         /// Change this if you host server.py yourself.</summary>
         public static string Server = "https://keyuth-web.onrender.com";
 
-        /// <summary>Last call's result (like KeyAuth's response).</summary>
+        /// <summary>Last call's result (success / message / ...).</summary>
         public data response = new data();
 
         public api(string name, string ownerid, string secret, string version)
@@ -172,7 +172,7 @@ namespace ISHU_Auth
             return m.Success ? m.Groups[1].Value : "";
         }
 
-        /// <summary>Works like KeyAuth's HWID fingerprint (machine GUID hash).</summary>
+        /// <summary>HWID fingerprint (machine GUID hash) — device lock.</summary>
         public static string Fingerprint()
         {
             try

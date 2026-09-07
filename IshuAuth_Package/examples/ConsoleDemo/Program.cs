@@ -3,9 +3,9 @@ using ISHU_Auth;
 
 class Program
 {
-    // SAME style as KeyAuth — name / ownerid / secret / version, no API key.
+    // ISHU AUTH style — name / ownerid / secret / version, no API key.
     // Get Owner ID + Secret from: panel -> Install page.
-    private static readonly api KeyAuthApp = new api(
+    private static readonly api IshuAuthApp = new api(
         name:    "APP-1LHEK3",
         ownerid: "IHH231792GMAILCOM-OFPDR",
         secret:  "SEC_fV0a-6poU-U6sp-xmAN-Wimi-j3ZF-D2HE-d5Hh",
@@ -24,15 +24,15 @@ class Program
         {
             string lk = args.Length > 1 ? args[1] : "";
             Console.WriteLine("Server : " + api.Server);
-            Console.WriteLine("App    : " + KeyAuthApp.name + " v" + KeyAuthApp.version);
+            Console.WriteLine("App    : " + IshuAuthApp.name + " v" + IshuAuthApp.version);
             Console.Write("init() ");
-            KeyAuthApp.init();
-            Console.WriteLine(KeyAuthApp.response.success ? "OK" : "FAIL: " + KeyAuthApp.response.message);
+            IshuAuthApp.init();
+            Console.WriteLine(IshuAuthApp.response.success ? "OK" : "FAIL: " + IshuAuthApp.response.message);
             Console.Write("license(" + lk + ") ");
-            KeyAuthApp.license(lk);
-            Console.WriteLine(KeyAuthApp.response.success
-                ? "=> LOGIN OK @ " + KeyAuthApp.response.expiry
-                : "=> DENIED: " + KeyAuthApp.response.message);
+            IshuAuthApp.license(lk);
+            Console.WriteLine(IshuAuthApp.response.success
+                ? "=> LOGIN OK @ " + IshuAuthApp.response.expiry
+                : "=> DENIED: " + IshuAuthApp.response.message);
             return;
         }
 
@@ -40,17 +40,17 @@ class Program
         string pass = args.Length > 1 ? args[1] : "password";
 
         Console.WriteLine("Server : " + api.Server);
-        Console.WriteLine("App    : " + KeyAuthApp.name + " v" + KeyAuthApp.version);
+        Console.WriteLine("App    : " + IshuAuthApp.name + " v" + IshuAuthApp.version);
 
         Console.Write("init() ");
-        KeyAuthApp.init();
-        Console.WriteLine(KeyAuthApp.response.success ? "OK" : "FAIL: " + KeyAuthApp.response.message);
+        IshuAuthApp.init();
+        Console.WriteLine(IshuAuthApp.response.success ? "OK" : "FAIL: " + IshuAuthApp.response.message);
 
         Console.Write("login(" + user + ") ");
-        KeyAuthApp.login(user, pass);
-        Console.WriteLine(KeyAuthApp.response.success
-            ? "=> LOGIN OK @ " + KeyAuthApp.response.expiry
-            : "=> DENIED: " + KeyAuthApp.response.message);
+        IshuAuthApp.login(user, pass);
+        Console.WriteLine(IshuAuthApp.response.success
+            ? "=> LOGIN OK @ " + IshuAuthApp.response.expiry
+            : "=> DENIED: " + IshuAuthApp.response.message);
 
         return;
     }
@@ -58,49 +58,49 @@ class Program
     // Full control demo: create -> login -> ban -> unban -> login -> delete
     static void FullControl()
     {
-        KeyAuthApp.init();
+        IshuAuthApp.init();
         Console.WriteLine("Server : " + api.Server);
-        Console.WriteLine("App    : " + KeyAuthApp.name + " (ownerid " + KeyAuthApp.ownerid + ")");
+        Console.WriteLine("App    : " + IshuAuthApp.name + " (ownerid " + IshuAuthApp.ownerid + ")");
 
         string u = "ctl" + Environment.TickCount.ToString("X");
 
         Console.Write("create(" + u + ") ");
-        var c = KeyAuthApp.Create(u, "pass123", "30d");
+        var c = IshuAuthApp.Create(u, "pass123", "30d");
         Console.WriteLine(c.ok ? "OK id=" + c.id : "FAIL: " + c.message);
         string id = c.id;
 
         Console.Write("login(" + u + ") ");
-        KeyAuthApp.login(u, "pass123");
-        Console.WriteLine(KeyAuthApp.response.success ? "LOGIN OK @ " + KeyAuthApp.response.expiry : "DENIED: " + KeyAuthApp.response.message);
+        IshuAuthApp.login(u, "pass123");
+        Console.WriteLine(IshuAuthApp.response.success ? "LOGIN OK @ " + IshuAuthApp.response.expiry : "DENIED: " + IshuAuthApp.response.message);
 
         Console.Write("ban(" + u + ") ");
-        KeyAuthApp.Ban(id, true);
-        Console.WriteLine(KeyAuthApp.response.message);
+        IshuAuthApp.Ban(id, true);
+        Console.WriteLine(IshuAuthApp.response.message);
 
         Console.Write("login(" + u + ") again ");
-        KeyAuthApp.login(u, "pass123");
-        Console.WriteLine(KeyAuthApp.response.success ? "OK (UNEXPECTED)" : "DENIED: " + KeyAuthApp.response.message);
+        IshuAuthApp.login(u, "pass123");
+        Console.WriteLine(IshuAuthApp.response.success ? "OK (UNEXPECTED)" : "DENIED: " + IshuAuthApp.response.message);
 
         Console.Write("unban(" + u + ") ");
-        KeyAuthApp.Ban(id, false);
-        Console.WriteLine(KeyAuthApp.response.message);
+        IshuAuthApp.Ban(id, false);
+        Console.WriteLine(IshuAuthApp.response.message);
 
         Console.Write("delete(" + u + ") ");
-        var d = KeyAuthApp.Delete(id);
+        var d = IshuAuthApp.Delete(id);
         Console.WriteLine(d.ok ? "DELETED" : "FAIL: " + d.message);
 
         Console.Write("login(" + u + ") after delete ");
-        KeyAuthApp.login(u, "pass123");
-        Console.WriteLine(KeyAuthApp.response.success ? "OK (UNEXPECTED)" : "DENIED: " + KeyAuthApp.response.message);
+        IshuAuthApp.login(u, "pass123");
+        Console.WriteLine(IshuAuthApp.response.success ? "OK (UNEXPECTED)" : "DENIED: " + IshuAuthApp.response.message);
 
         Console.Write("CreateKey(7d) ");
-        string lk = KeyAuthApp.CreateKey("7d");
+        string lk = IshuAuthApp.CreateKey("7d");
         Console.WriteLine(lk.Length > 0 ? lk : "FAIL");
         if (lk.Length > 0)
         {
             Console.Write("license(" + lk + ") ");
-            KeyAuthApp.license(lk);
-            Console.WriteLine(KeyAuthApp.response.success ? "LOGIN OK @ " + KeyAuthApp.response.expiry : "DENIED: " + KeyAuthApp.response.message);
+            IshuAuthApp.license(lk);
+            Console.WriteLine(IshuAuthApp.response.success ? "LOGIN OK @ " + IshuAuthApp.response.expiry : "DENIED: " + IshuAuthApp.response.message);
         }
 
         Console.WriteLine("== FULL CONTROL OK ==");
