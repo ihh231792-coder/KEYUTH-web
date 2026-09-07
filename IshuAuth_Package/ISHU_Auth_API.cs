@@ -65,6 +65,16 @@ namespace ISHU_Auth
             });
         }
 
+        // ---------- license key login (key-only projects) ----------
+        public void license(string key)
+        {
+            response = Call("/api/verify", new Dictionary<string, string>
+            {
+                ["name"] = name, ["ownerid"] = ownerid, ["secret"] = secret, ["version"] = version,
+                ["user"] = key, ["pass"] = key, ["hwid"] = Fingerprint()
+            });
+        }
+
         // ---------- internals ----------
         static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
 
