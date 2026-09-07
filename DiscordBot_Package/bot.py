@@ -20,7 +20,8 @@ with open(CFG_PATH, encoding="utf-8") as _f:
     CFG = json.load(_f)
 
 SERVER   = CFG.get("server", "").rstrip("/")
-NAME     = CFG.get("name", "")
+NAME     = CFG.get("name", "")          # app label (also used as appid fallback)
+MASTER_KEY = CFG.get("key", "")         # master api_key for /api/bootstrap
 OWNERID  = CFG.get("ownerid", "")
 SECRET   = CFG.get("secret", "")
 VERSION  = CFG.get("version", "1.0")
@@ -111,6 +112,34 @@ async def _task_status(token: str) -> dict:
             f"{SERVER}/api/shortlink/check", json=payload,
             timeout=aiohttp.ClientTimeout(total=25)) as r:
             return await r.json()
+
+
+async def _bootstrap():
+    """Re-register the owner row. Render's free SQLite DB resets on every
+    restart/redeploy, so without this the /api/botkey auth would 401 and the
+    bot would show 'API error.' Calling it on startup makes the bot restore
+    the owner row automatically — no manual reseed ever needed."""
+    if not MASTER_KEY or not NAME:
+        return False
+    payload = {
+        "key": MASTER_KEY,
+        "appid": NAME,
+        "appname": NAME,
+        "ownerid": OWNERID,
+        "secret": SECRET,
+        "version": VERSION,
+    }
+    async with aiohttp.ClientSession() as s:
+        try:
+            async with s.post(
+                f"{SERVER}/api/bootstrap", json=payload,
+                timeout=aiohttp.ClientTimeout(total=25)) as r:
+                if r.status == 200:
+                    data = await r.json()
+                    return bool(data.get("ok"))
+        except Exception:
+            return False
+    return False
 
 
 # ── Cooldown check ──────────────────────────────────────────────────────────
@@ -415,8 +444,9 @@ async def status_cmd(interaction: discord.Interaction):
 # ── Startup ─────────────────────────────────────────────────────────────────
 @bot.event
 async def on_ready():
+    ok = await _bootstrap()
     await tree.sync()
-    print(f"Logged in as {bot.user}  |  /key synced")
+    print(f"Logged in as {bot.user}  |  /key synced  |  owner row: {'re-seeded' if ok else 'NOT seeded (check config key)'}")
 
 
 bot.run(CFG["token"])

@@ -36,6 +36,11 @@ STEP 3 — Config file edit karo
      owner_id     → apna Discord User ID (right click → Copy ID)
                     (Developer Mode ON karo: Settings → Advanced)
      server       → "https://keyuth-web.onrender.com" (default)
+     key          → aapka ISHU AUTH MASTER API KEY — bot isse
+                    startup pe server pe owner row khud restore
+                    karta hai (Render restart/redeploy pe DB reset
+                    hoti hai — isi liye zaroori hai, warna
+                    "API error." 401 aata hai)
      name         → apka ISHU AUTH App ID (e.g. APP-1LHEK3)
      ownerid      → apka ISHU AUTH Owner ID
      secret       → apka ISHU AUTH Secret
@@ -62,6 +67,7 @@ key_hours    → key kitne ghante chalega (default 48)
      "token": "MTIzNDU2Nzg5MDEyMzQ1Njc4.OuZt_AbCdEfGhIjKlMnOp",
      "owner_id": 123456789012345678,
      "server": "https://keyuth-web.onrender.com",
+     "key": "ISHU_fina-Klv1-U4cv-mYUT-714O-Dl5Y-4ABo-ICeF",
      "name": "APP-1LHEK3",
      "ownerid": "IHH231792GMAILCOM-OFPDR",
      "secret": "SEC_fV0a-6poU-U6sp-xmAN-Wimi-j3ZF-D2HE-d5Hh",
@@ -74,6 +80,8 @@ key_hours    → key kitne ghante chalega (default 48)
 
    Upar ki har value ko bot.py is tarah padhata hai:
      SERVER         ← config.json ka "server"      (API server ka URL)
+     MASTER_KEY     ← "key"     (tumhari master API key — startup pe
+                                 owner row auto-restore ke liye)
      NAME           ← "name"     (tumhari App ID)
      OWNERID        ← "ownerid"  (tumhara Owner ID)
      SECRET         ← "secret"   (tumhara Secret)
@@ -304,6 +312,20 @@ Solution: Bot restart karo. 1-2 minute wait karo.
 Problem: "Invalid ownerid/secret"
 Solution: config.json me name/ownerid/secret/version check
           karo — ye match hona chahiye ISHU AUTH panel se.
+
+Problem: Bot "API error." bol raha hai (owner /key pe)
+Solution: Bot ko band karke dubara chalao — ab startup pe wo
+          master "key" se owner row khud restore karta hai.
+          (Render restart/redeploy pe DB reset hone se pehle ye
+          uth-ta tha.) Configuration me "key" bhara hai pakka
+          karo.
+
+Problem: VPLINK short link nahi ban raha
+Solution: vplink_api me SIRF VPLINK ka token do — wo 40-char ka
+          hex jaisa dikhta hai (e.g. 3d22217f...). Bitcoin
+          address (bc1q...) ya doosri cheez NAHI. Galat token
+          ho to bot seedha callback URL dikhata hai — key to
+          chalti hai, bas ad-earning nahi.
 
 Problem: Key generate nahi ho raha
 Solution: server online hai? check:
