@@ -38,9 +38,6 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(ROOT, "ishu_auth.db")
 PORT = int(os.environ.get("PORT", "3000"))
 
-# in-memory presence: {appid: {username_or_panel: last_seen_ms}}
-PRESENCE = {}
-
 DUR_MS = {
     "permanent": 0,
     "1h": 3600 * 1000,
@@ -207,35 +204,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_json(ok(list=[row2dict(r) for r in rows]))
 
         if p.path == "/api/stats":
-            api_key = self.headers.get("x-api-key")
-            qs = parse_qs(p.query)
-            appid = (qs.get("appid") or [""])[0]
-            if not api_key or not appid:
-                return self._send_json(fail("missing key or appid", 401))
-            con = db()
-            owner = con.execute("SELECT 1 FROM owners WHERE api_key=? AND appid=?",
-                                (api_key, appid)).fetchone()
-            if not owner:
-                con.close()
-                return self._send_json(fail("invalid key/appid", 401))
-            total = con.execute("SELECT COUNT(*) AS c FROM licenses WHERE appid=?",
-                                (appid,)).fetchone()["c"]
-            window = int((qs.get("window") or ["900000"])[0])  # ms; default 15 min
-            now = int(datetime.datetime.now().timestamp() * 1000)
-            # panel (dashboard open) = present
-            PRESENCE.setdefault(appid, {})["__panel__"] = now
-            # prune stale presence
-            for who in [k for k, ts in PRESENCE.get(appid, {}).items() if now - ts > window]:
-                del PRESENCE[appid][who]
-            seen = len([1 for who, ts in PRESENCE.get(appid, {}).items() if now - ts <= window])
-            online_rows = con.execute(
-                "SELECT username FROM licenses WHERE appid=? AND last_login IS NOT NULL"
-                " AND last_login >= ?", (appid, now - window)).fetchall()
-            con.close()
-            for row in online_rows:
-                PRESENCE.setdefault(appid, {})[row["username"]] = now
-            online = len({who for who, ts in PRESENCE.get(appid, {}).items() if now - ts <= window})
-            return self._send_json(ok(total_users=total, online=online))
+            return self._send_json(fail("removed"))
 
         # static files
         return super().do_GET()
@@ -504,7 +473,6 @@ class Handler(SimpleHTTPRequestHandler):
             msg = "banned" if banned else "unbanned"
         else:  # delete
             con.execute("DELETE FROM licenses WHERE id=?", (lid,))
-            PRESENCE.get(appid, {}).pop(row["username"], None)
             con.commit(); con.close()
             return ok(message="deleted")
         con.commit(); con.close()
@@ -550,7 +518,6 @@ class Handler(SimpleHTTPRequestHandler):
         now = int(datetime.datetime.now().timestamp() * 1000)
         con.execute("UPDATE licenses SET last_login=?, hwid=? WHERE id=?", (now, new_hwid, row["id"]))
         con.commit()
-        PRESENCE.setdefault(appid, {})[row["username"]] = now
         expires = row["expires_at"]
         con.close()
         return ok(success=True, message="valid",
