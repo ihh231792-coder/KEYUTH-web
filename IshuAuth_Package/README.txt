@@ -7,7 +7,7 @@ CLASS        : api (in ISHU_Auth_API.cs) / IshuAuth (in IshuAuth.cs)
 
 What's inside?
   IshuAuth.cs       -> main SDK (drop this into your project)
-  ISHU_Auth_API.cs  -> KeyAuth-style SDK - name/ownerid/secret/version
+  ISHU_Auth_API.cs  -> name/ownerid/secret/version style SDK
   Example.cs        -> full working example
   INSTALL-GUIDE.txt -> step-by-step install & use guide (with GUID)
   README.txt        -> this file

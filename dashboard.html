@@ -859,7 +859,7 @@ function buildSnippet(app) {
   const ni = (v) => v || 'APP-XXXXXX';
   return `using ISHU_Auth;
 
-public static api KeyAuthApp = new api(
+public static api IshuAuthApp = new api(
     name:    "${ni(app.appId)}",
     ownerid: "${ni(ME.ownerId)}",
     secret:  "${ni(ME.secretId)}",

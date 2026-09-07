@@ -34,7 +34,7 @@ ya ye file download karo:
 
 Zip me ye files milengi:
   IshuAuth.cs          -> simple SDK (Verify/Create/Reset/Renew/Ban)
-  ISHU_Auth_API.cs     -> KeyAuth-style SDK (api class, ownerid/secret)
+  ISHU_Auth_API.cs     -> name/ownerid/secret/version style SDK
   Example.cs           -> working example
   README.txt           -> SDK details
   INSTALL-GUIDE.txt    -> ye file
@@ -55,7 +55,7 @@ STEP 3 - LOGIN CODE (4 lines)
 --------------------------------------------------------
 using ISHU_Auth;
 
-public static api KeyAuthApp = new api(
+public static api IshuAuthApp = new api(
     name:    "APP-1LHEK3",                    <-- apna APP ID
     ownerid: "IHH231792GMAILCOM-OFPDR",       <-- apna OWNER ID
     secret:  "SEC_fV0a-...",                  <-- apna SECRET ID
@@ -63,24 +63,24 @@ public static api KeyAuthApp = new api(
 );
 
 // login:
-var res = await KeyAuthApp.login("user123", "pass123");
+var res = await IshuAuthApp.login("user123", "pass123");
 if (res.success) Console.WriteLine("LOGIN OK @ " + res.expiry);
 else Console.WriteLine("DENIED: " + res.message);
 
 // license key login:
-var lic = await KeyAuthApp.license("LIC_XXXX-....");
+var lic = await IshuAuthApp.license("LIC_XXXX-....");
 if (lic.success) Console.WriteLine("LOGIN OK @ " + lic.expiry);
 
 --------------------------------------------------------
 STEP 4 - ADMIN CONTROL (from your own app)
 --------------------------------------------------------
-await KeyAuthApp.Create("user2", "pass2", "30d", "user");  // new user
-await KeyAuthApp.CreateKey("30d");                          // new license key
-await KeyAuthApp.Delete(id);                                // delete user/key
-await KeyAuthApp.Ban(id, true);                             // ban
-await KeyAuthApp.Ban(id, false);                            // unban
-await KeyAuthApp.Renew(id, "7d");                           // renew
-await KeyAuthApp.ResetHwid(id);                             // hwid reset
+await IshuAuthApp.Create("user2", "pass2", "30d", "user");  // new user
+await IshuAuthApp.CreateKey("30d");                          // new license key
+await IshuAuthApp.Delete(id);                                // delete user/key
+await IshuAuthApp.Ban(id, true);                             // ban
+await IshuAuthApp.Ban(id, false);                            // unban
+await IshuAuthApp.Renew(id, "7d");                           // renew
+await IshuAuthApp.ResetHwid(id);                             // hwid reset
 
 (Sab kuch panel ke Users page se bhi ho sakta hai.)
 
@@ -111,7 +111,7 @@ NOTE
 --------------------------------------------------------
 - Is package me koi NuGet package ya DLL nahi chahiye -
   sirf ek .cs file project me add karni hai.
-- Ye package ISHU AUTH keyuth platform ke liye hai:
+- Ye package ISHU AUTH platform ke liye hai:
   jo bhi isse download kare, uske apne panel login se
   alag alag owner apni app banate hain - sab safe/isolated.
 
