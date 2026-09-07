@@ -94,7 +94,7 @@ namespace ISHU_Auth
         public string CreateKey(string duration = "7d")
         {
             Create("k" + Guid.NewGuid().ToString("N").Substring(0, 10), null, duration, true);
-            return response.success ? response.license_key : "";
+            return response.ok ? response.license_key : "";
         }
 
         public data Delete(string id)

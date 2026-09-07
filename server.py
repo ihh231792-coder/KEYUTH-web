@@ -390,7 +390,7 @@ class Handler(SimpleHTTPRequestHandler):
             con.execute("UPDATE licenses SET duration=?, expires_at=? WHERE id=?", (duration, expires, lid))
             msg = "renewed"
         elif action == "ban":
-            banned = 1 if body.get("banned") else 0
+            banned = 1 if _flag(body.get("banned"), True) else 0
             con.execute("UPDATE licenses SET banned=? WHERE id=?", (banned, lid))
             msg = "banned" if banned else "unbanned"
         else:  # delete

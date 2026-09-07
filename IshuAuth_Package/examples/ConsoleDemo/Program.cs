@@ -66,7 +66,7 @@ class Program
 
         Console.Write("create(" + u + ") ");
         var c = KeyAuthApp.Create(u, "pass123", "30d");
-        Console.WriteLine(c.success ? "OK id=" + c.id : "FAIL: " + c.message);
+        Console.WriteLine(c.ok ? "OK id=" + c.id : "FAIL: " + c.message);
         string id = c.id;
 
         Console.Write("login(" + u + ") ");
@@ -87,7 +87,7 @@ class Program
 
         Console.Write("delete(" + u + ") ");
         var d = KeyAuthApp.Delete(id);
-        Console.WriteLine(d.success ? "DELETED" : "FAIL: " + d.message);
+        Console.WriteLine(d.ok ? "DELETED" : "FAIL: " + d.message);
 
         Console.Write("login(" + u + ") after delete ");
         KeyAuthApp.login(u, "pass123");
