@@ -217,7 +217,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json(fail("invalid key/appid", 401))
             total = con.execute("SELECT COUNT(*) AS c FROM licenses WHERE appid=?",
                                 (appid,)).fetchone()["c"]
-            window = int(qs.get("window") or ["900000"])[0]  # ms; default 15 min
+            window = int((qs.get("window") or ["900000"])[0])  # ms; default 15 min
             now = int(datetime.datetime.now().timestamp() * 1000)
             online = con.execute(
                 "SELECT COUNT(*) AS c FROM licenses WHERE appid=? AND last_login IS NOT NULL"
