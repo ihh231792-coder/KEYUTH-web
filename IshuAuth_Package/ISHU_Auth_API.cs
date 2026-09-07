@@ -1,5 +1,5 @@
 // =============================================================
-//   ISHU AUTH - SDK (C#)  KEYAUTH-STYLE CLASS
+//   ISHU AUTH - SDK (C#)  API-KEY LOGIN CLASS
 //   Drop this one file into your project. No package needed.
 // -------------------------------------------------------------
 //   USE (same flow as other auth systems — 4 values, no API key):
