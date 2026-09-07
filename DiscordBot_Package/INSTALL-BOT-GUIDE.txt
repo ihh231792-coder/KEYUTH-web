@@ -136,6 +136,45 @@ hoga, aur uski EARNING usi ko milegi.
 Agar vplink_api khali hai, bot badle me aapka direct
 "shortener" URL hi dikhata hai (puraane jaisa).
 
+===============================================================
+EXAMPLE — SHORTENER / VPLINK CONFIG KAISE BHAREIN
+===============================================================
+
+config.json ka ye hissa aise dikhna chahiye:
+
+Scenario 1 — VPLINK SE PAISE KAMANE HO:
+---------------------------------------------------------------
+  "shortener": "https://yoursite.com/download-page",
+  "vplink_api": "3d22217f8c1b0d9faf78c89bccb1b35dd9ad3064",
+
+  YAHAN:
+  - "shortener"  = TUMHARA destination link (jo page user ko
+                   khulna hai — aapki site / video / download)
+  - "vplink_api" = TUMHARA apna VPLINK token (ad earning
+                   TUMHARE account me aayegi)
+
+  Bot ab jab bhi /key karega ye karega:
+  1. VPLINK API se chhota link banayega, jaise:
+     https://vplink.in/Xh2kY9
+  2. User ko wo chhota link dikhega
+  3. User kholta hai → AD dikhti hai → page khulta hai
+  4. "I completed" dabata hai → key DM me mil jaata hai
+
+Scenario 2 — VPLINK NAHI, DIRECT SHORTENER LINK HI DO (gplinks / ouo / aadhar koi bhi):
+---------------------------------------------------------------
+  "shortener": "https://gpflixs.in/xyz",
+  "vplink_api": "",
+
+  YAHAN "vplink_api" khali rakho → bot wahi link seedha dikhata
+  hai, koi chhota banane ka kaam nahi.
+
+YAAD RAKHO:
+  - "shortener" me WAHI URL daalo jo BOT user ko open karega
+  - "vplink_api" me SIRF VPLINK ka token, bina kisi space ke
+  - Token galat ho to short link nahi banega — bot phir bhi
+    "shortener" wala link seedha dikha deta hai (kuch nahi toda)
+
+
 LICENSE KEY vs USERNAME+PASSWORD (DM me kya jayega)
 ===============================================================
 
