@@ -1,7 +1,9 @@
 """
 Discord Key Bot — ISHU AUTH integration
-Slash /key command: owner gets permanent/custom-expiry options; normal users get a 48-hour
-key after completing a shortener link.
+Slash /key command: owner gets permanent/custom-expiry options; normal users
+choose License Key or Username+Password, then must REALLY complete a VPLINK
+link. Completion is verified server-side (callback hit) — no "I completed"
+button — and the key is auto-DM'd when it fires.
 """
 import os, json, time, asyncio, secrets
 from pathlib import Path
@@ -27,7 +29,6 @@ VPLINK_API = CFG.get("vplink_api", "")    # VPLINK API token (optional but recom
 BOT_OWNER = int(CFG.get("owner_id", 0))   # Discord user id of the admin
 KEY_HOURS = int(CFG.get("key_hours", 48))
 COOLDOWN_HOURS = int(CFG.get("cooldown_hours", 48))
-KEY_TYPE = CFG.get("key_type", "license")   # "license" (key only) or "user" (username+password)
 
 
 # ── Persistent data ─────────────────────────────────────────────────────────
@@ -62,14 +63,14 @@ async def _botkey(username: str, duration: str = "48h", ltype: str = "license", 
             return await r.json()
 
 
-async def _shorten() -> str | None:
-    """Generate a short link via VPLINK API. Returns the short URL, or the raw
-    destination link if VPLINK is not configured or fails."""
-    if not VPLINK_API or not SHORTENER:
-        return SHORTENER or None
+async def _shorten(url: str) -> str | None:
+    """Generate a short link via VPLINK API. Returns the short URL, or the
+    original URL if VPLINK is not configured or fails."""
+    if not VPLINK_API or not url:
+        return url or None
     params = {
         "api": VPLINK_API,
-        "url": SHORTENER,
+        "url": url,
         "format": "text",
     }
     async with aiohttp.ClientSession() as s:
@@ -79,11 +80,37 @@ async def _shorten() -> str | None:
                 timeout=aiohttp.ClientTimeout(total=20)) as r:
                 if r.status == 200:
                     text = (await r.text()).strip()
-                    if text.startswith("https://vplink.in/"):
+                    if "vplink.in/" in text:
                         return text
         except Exception:
             pass
-    return SHORTENER or None
+    return url or None
+
+
+async def _task_new(user_id: int, ltype: str) -> dict:
+    """Register a verified shortlink task on the server. Returns {token,...}."""
+    payload = {
+        "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
+        "user_id": str(user_id), "ltype": ltype, "destination": SHORTENER,
+    }
+    async with aiohttp.ClientSession() as s:
+        async with s.post(
+            f"{SERVER}/api/shortlink/new", json=payload,
+            timeout=aiohttp.ClientTimeout(total=25)) as r:
+            return await r.json()
+
+
+async def _task_status(token: str) -> dict:
+    """Server-side completion check (no client button involved)."""
+    payload = {
+        "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
+        "token": token,
+    }
+    async with aiohttp.ClientSession() as s:
+        async with s.post(
+            f"{SERVER}/api/shortlink/check", json=payload,
+            timeout=aiohttp.ClientTimeout(total=25)) as r:
+            return await r.json()
 
 
 # ── Cooldown check ──────────────────────────────────────────────────────────
@@ -121,47 +148,138 @@ tree = app_commands.CommandTree(bot)
 
 
 # ── Views ───────────────────────────────────────────────────────────────────
-class ShortenerView(ui.View):
-    """Shown to normal users: shortener link + 'I completed' button."""
+# Pending verified tasks: token -> {channel_id, msg_id, user_id, ltype}
+PENDING = {}
+TASK_TIMEOUT_SECONDS = 300   # how long the bot waits for a real completion
+TASK_POLL_SECONDS = 5
+
+
+class UserKeyTypeView(ui.View):
+    """Shown to normal users: choose what they want — License Key or Username+Password."""
     def __init__(self, user_id: int):
-        super().__init__(timeout=None)
+        super().__init__(timeout=300)
         self.user_id = user_id
 
-    @ui.button(label="I completed the link", style=discord.ButtonStyle.success, emoji="\u2705")
-    async def on_complete(self, interaction: discord.Interaction, button: ui.Button):
-        if interaction.user.id != self.user_id:
-            return await interaction.response.send_message("This button is not for you.", ephemeral=True)
+    def _pick(self, ltype: str) -> str:
+        return "Username + Password" if ltype == "user" else "License Key"
 
+    async def _start(self, interaction: discord.Interaction, ltype: str):
+        if interaction.user.id != self.user_id:
+            return
         allowed, remaining = _user_cooldown_ok(self.user_id)
         if not allowed:
             return await interaction.response.send_message(
-                f"Please wait {_format_time(remaining)} before generating a new key.", ephemeral=True
-            )
-
+                f"Please wait {_format_time(remaining)} before generating a new key.", ephemeral=True)
         await interaction.response.defer(ephemeral=True)
-        username = f"dc_{self.user_id}"
-        data = await _botkey(username, duration=f"{KEY_HOURS}h", ltype=KEY_TYPE)
 
-        if not data.get("ok"):
-            return await interaction.followup.send("Failed to generate key. Try again later.", ephemeral=True)
+        res = await _task_new(self.user_id, ltype)
+        if not res.get("ok"):
+            return await interaction.followup.send(
+                "Could not start the task. Try again later.", ephemeral=True)
 
-        body = _fmt_issue(data)
-        expires = data.get("expires", "")
+        token = res["token"]
+        callback = f"{SERVER}/api/shortlink/c?token={token}"
+        link = await _shorten(callback)
+        if not link:
+            return await interaction.followup.send(
+                "Shortener link is not configured. Contact admin.", ephemeral=True)
 
-        DATA["cooldowns"][str(self.user_id)] = time.time()
-        DATA["last_keys"][str(self.user_id)] = {"body": body, "expires": expires}
-        _save_data(DATA)
-
-        try:
-            await interaction.user.send(
-                f"{body}\nExpires: {expires}"
-            )
-            await interaction.followup.send("Sent your key via DM!", ephemeral=True)
-        except discord.Forbidden:
+        text = (
+            f"Tap the link and **complete it fully**:\n{link}\n\n"
+            f"\u23f3 Waiting for your **real completion** \u2014 your "
+            f"**{self._pick(ltype)}** will be sent to your DM automatically "
+            f"once it is verified. No button \u2014 no shortcut.\n\n"
+            f"Key lasts **{KEY_HOURS}h**."
+        )
+        msg = await interaction.followup.send(text, ephemeral=True, wait=True)
+        if getattr(msg, "id", None):
+            PENDING[token] = {
+                "channel_id": interaction.channel_id,
+                "msg_id": msg.id,
+                "user_id": self.user_id,
+                "ltype": ltype,
+            }
+            bot.loop.create_task(_await_and_issue(token))
+        else:
             await interaction.followup.send(
-                f"{body}\nExpires: {expires}\n\n*Could not DM you — please enable DMs.*",
-                ephemeral=True,
-            )
+                "Task started, but I couldn't track it. Contact admin.", ephemeral=True)
+
+    @ui.button(label="License Key", style=discord.ButtonStyle.primary, emoji="\U0001f511")
+    async def on_license(self, interaction: discord.Interaction, button: ui.Button):
+        await self._start(interaction, "license")
+
+    @ui.button(label="Username + Password", style=discord.ButtonStyle.success, emoji="\U0001f465")
+    async def on_user(self, interaction: discord.Interaction, button: ui.Button):
+        await self._start(interaction, "user")
+
+
+async def _edit_task(task: dict, text: str):
+    channel = bot.get_channel(task["channel_id"])
+    if not channel:
+        return
+    try:
+        msg = channel.get_partial_message(task["msg_id"])
+        await msg.edit(content=text, view=None)
+    except Exception:
+        pass
+
+
+async def _deliver_key(task: dict, token: str):
+    """After server confirms a real completion: issue + auto-DM the chosen key."""
+    user_id = task["user_id"]
+    ltype = task["ltype"]
+    data = await _botkey(f"dc_{user_id}", duration=f"{KEY_HOURS}h", ltype=ltype,
+                         password=_passwd() if ltype == "user" else None)
+    if not data.get("ok"):
+        await _edit_task(task, "\u274c Failed to generate your key server-side. Contact admin.")
+        PENDING.pop(token, None)
+        return
+
+    body = _fmt_issue(data)
+    expires = data.get("expires", "")
+    DATA["cooldowns"][str(user_id)] = time.time()
+    DATA["last_keys"][str(user_id)] = {"body": body, "expires": expires}
+    _save_data(DATA)
+
+    dm_text = f"\U0001f511 **Your key is ready!**\n{body}\nExpires: {expires}"
+    sent = False
+    try:
+        target = bot.get_user(user_id) or await bot.fetch_user(user_id)
+        await target.send(dm_text)
+        sent = True
+    except discord.Forbidden:
+        sent = False
+    except discord.HTTPException:
+        sent = False
+
+    what = "Username + Password" if ltype == "user" else "License Key"
+    if sent:
+        await _edit_task(task, f"\u2705 **Verified \u2014 {what} sent to your DM!**")
+    else:
+        await _edit_task(task, f"{body}\nExpires: {expires}\n\n*Couldn't DM you \u2014 please enable DMs.*")
+    PENDING.pop(token, None)
+
+
+async def _await_and_issue(token: str):
+    """Poll the server until a REAL completion fires (callback hit), then
+    auto-DM the key. No user-clickable 'I completed' button exists, so fake
+    clicks can't mint keys."""
+    task = PENDING.get(token)
+    if not task:
+        return
+    deadline = time.time() + TASK_TIMEOUT_SECONDS
+    while time.time() < deadline:
+        await asyncio.sleep(TASK_POLL_SECONDS)
+        try:
+            res = await _task_status(token)
+            if res.get("ok") and res.get("completed"):
+                await _deliver_key(task, token)
+                return
+        except Exception:
+            pass
+    if token in PENDING:
+        await _edit_task(task, "\u23f0 **Timeout** \u2014 task was not completed. Run `/key` to try again.")
+        PENDING.pop(token, None)
 
 
 class CustomDaysModal(ui.Modal, title="Custom key duration"):
@@ -267,14 +385,8 @@ async def key_cmd(interaction: discord.Interaction):
             ephemeral=True,
         )
 
-    await interaction.response.defer(ephemeral=True)
-    link = await _shorten()
-    if not link:
-        return await interaction.followup.send("Shortener link is not configured. Contact admin.", ephemeral=True)
-    await interaction.followup.send(
-        f"Complete the shortener below to receive a **{KEY_HOURS}h** key:\n{link}",
-        view=ShortenerView(interaction.user.id),
-        ephemeral=True,
+    await interaction.response.send_message(
+        "What do you want?", view=UserKeyTypeView(interaction.user.id), ephemeral=True,
     )
 
 

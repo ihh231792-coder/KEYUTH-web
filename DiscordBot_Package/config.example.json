@@ -8,7 +8,6 @@
   "version": "1.0",
   "shortener": "https://yoursite.com/download-page",
   "vplink_api": "7d75a5c9716a7dd3df75964f59249d780b3f199a",
-  "key_type": "license",
   "key_hours": 48,
   "cooldown_hours": 48
 }

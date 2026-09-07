@@ -105,6 +105,18 @@ def db_init():
     cols = [r[1] for r in con.execute("PRAGMA table_info(licenses)")]
     if "hwid_locked" not in cols:
         con.execute("ALTER TABLE licenses ADD COLUMN hwid_locked INTEGER DEFAULT 1")
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS shortlink_tasks (
+            token TEXT PRIMARY KEY,
+            user_id TEXT,
+            ltype TEXT,
+            destination TEXT,
+            created_at INTEGER,
+            completed INTEGER DEFAULT 0,
+            completed_at INTEGER,
+            ip TEXT
+        )
+    """)
     con.commit()
     con.close()
 
@@ -206,6 +218,38 @@ class Handler(SimpleHTTPRequestHandler):
         if p.path == "/api/stats":
             return self._send_json(fail("removed"))
 
+        if p.path == "/api/shortlink/c":
+            qs = parse_qs(p.query)
+            token = (qs.get("token") or [""])[0]
+            dest = None
+            if token:
+                con = db()
+                row = con.execute(
+                    "SELECT destination, completed FROM shortlink_tasks WHERE token=?",
+                    (token,)).fetchone()
+                if row:
+                    dest = row["destination"]
+                    if not row["completed"]:
+                        addr = self.client_address[0] if self.client_address else ""
+                        con.execute(
+                            "UPDATE shortlink_tasks SET completed=1, completed_at=?, ip=? WHERE token=?",
+                            (int(datetime.datetime.now().timestamp() * 1000), addr, token))
+                        con.commit()
+                con.close()
+            if dest:
+                self.send_response(302)
+                self.send_header("Location", dest)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            html = "<html><body><h3>Link verified.</h3></body></html>".encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(html)))
+            self.end_headers()
+            self.wfile.write(html)
+            return
+
         # static files
         return super().do_GET()
 
@@ -245,6 +289,12 @@ class Handler(SimpleHTTPRequestHandler):
 
         if p.path == "/api/botkey":
             return self._send_json(self._bot_key(body))
+
+        if p.path == "/api/shortlink/new":
+            return self._send_json(self._shortlink_new(body))
+
+        if p.path == "/api/shortlink/check":
+            return self._send_json(self._shortlink_check(body))
 
         if p.path == "/api/license/resethwid":
             return self._send_json(self._mutate(body, action="hwid"))
@@ -309,6 +359,51 @@ class Handler(SimpleHTTPRequestHandler):
                         (key, appid)).fetchone()
         con.close()
         return o["appname"] if o and o["appname"] else ""
+
+    # --- /api/shortlink: verified VPLINK task system ---
+    # The VPLINK short link wraps our callback URL. Completion is recorded on
+    # the server only when the user's browser actually lands on the callback
+    # (after the VPLINK ad/countdown). The bot just polls /check — there is no
+    # client-side "I completed" button, so fake clicks can never mint a key.
+    def _shortlink_new(self, body):
+        key, appid, err, code = self._resolve_auth(body)
+        if err:
+            return fail(err, code)
+        user_id = (body.get("user_id") or "").strip()
+        ltype = body.get("ltype") or "license"
+        destination = (body.get("destination") or "").strip()
+        if not user_id:
+            return fail("user_id required")
+        if not destination:
+            return fail("destination required")
+        token = uuid.uuid4().hex
+        now = int(datetime.datetime.now().timestamp() * 1000)
+        con = db()
+        con.execute("DELETE FROM shortlink_tasks WHERE user_id=?", (user_id,))
+        con.execute(
+            "INSERT INTO shortlink_tasks"
+            " (token,user_id,ltype,destination,created_at,completed,completed_at,ip)"
+            " VALUES (?,?,?,?,?,0,NULL,NULL)",
+            (token, user_id, ltype, destination, now))
+        con.commit(); con.close()
+        return ok(token=token, user_id=user_id, ltype=ltype, completed=False)
+
+    def _shortlink_check(self, body):
+        key, appid, err, code = self._resolve_auth(body)
+        if err:
+            return fail(err, code)
+        token = (body.get("token") or "").strip()
+        if not token:
+            return fail("token required")
+        con = db()
+        row = con.execute(
+            "SELECT completed, ltype FROM shortlink_tasks WHERE token=?",
+            (token,)).fetchone()
+        con.close()
+        if not row:
+            return fail("task not found", 404)
+        return ok(token=token, completed=bool(row["completed"]),
+                  ltype=row["ltype"] or "license")
 
     def _init(self, body):
         key, appid, err, code = self._resolve_auth(body)

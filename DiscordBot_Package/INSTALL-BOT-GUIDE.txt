@@ -48,9 +48,10 @@ STEP 3 — Config file edit karo
                     VPLINK token yahan se: https://vplink.in
                     Ya koi bhi: gplinks / shrinkme / VPN link —
                     jo bhi SYSTEM use karoge, uska token yahan.
-     key_type     → normal users ko kya milega:
-                    "license"  = License Key (sirf key)
-                    "user"     = Username + Password (login wala)
+     key_type     → REMOVED. Normal users ab khud choose karte hain:
+                    "/key" pe button aata hai — "License Key" ya
+                    "Username + Password". (Purana config me ho to
+                    chhod do, bot use nahi karta)
 key_hours    → key kitne ghante chalega (default 48)
       cooldown_hours → user kitne ghante baad naya key le sakta
                        hai (default 48)
@@ -67,7 +68,6 @@ key_hours    → key kitne ghante chalega (default 48)
      "version": "1.0",
      "shortener": "https://yoursite.com/download-page",
      "vplink_api": "7d75a5c9716a7dd3df75964f59249d780b3f199a",
-     "key_type": "license",
      "key_hours": 48,
      "cooldown_hours": 48
    }
@@ -84,7 +84,6 @@ key_hours    → key kitne ghante chalega (default 48)
                                    sirf isi ko milte hain)
      KEY_HOURS      ← "key_hours"     (default 48)
      COOLDOWN_HOURS ← "cooldown_hours" (default 48)
-     KEY_TYPE       ← "key_type"      ("license" ya "user")
 
 STEP 4 — Bot run karo
   1. Python 3.9+ install hona chahiye
@@ -107,17 +106,30 @@ COMMANDS
 /status   — Check karo kitna time bacha hai next key ke liye
 
 ===============================================================
-NORMAL USER KA FLOW
+NORMAL USER KA FLOW (VERIFIED — NO FAKE COMPLETION)
 ===============================================================
 
 1. User /key type karta hai
-2. Bot usko shortener link deta hai (ephemeral msg)
-3. User shortener complete karta hai (captcha / vpn link)
-4. "I completed the link" button dabaata hai
-5. Bot 48h ka key (HWID-locked — ek PC pe hi chalta hai)
-   generate karke DM karta hai
-6. 48h tak user dubara key nahi le sakta (/status se check)
-7. 48h ke baad dubara /key se process repeat
+2. Bot puchta hai: "What do you want?"
+   - License Key        (key only)
+   - Username + Password (login wala)
+3. User ek choose karta hai → bot VPLINK ka chhota link deta hai
+4. User wo link kholta hai → AD ho rahi hai → CAPTCHA hota hai →
+   WAIT karta hai → 100% complete karta hai
+5. Link complete hote hi user ka browser SERVER ke callback pe
+   redirect hota hai → SERVER completion RECORD karta hai
+6. BOT automatically (har 5 sec) server se check karta hai ki
+   completion sach me hui ya nahi
+7. Completion milte hi bot uski chosen key (License ya User+Pass)
+   generate karke DM KARTA HAI — automatically, koi button nahi
+8. 48h tak user dubara key nahi le sakta (/status se check)
+9. 48h ke baad dubara /key se process repeat
+
+KOI "I completed the link" BUTTON NAHI HAI — isi liye FAKE click
+nahi ho sakta. Jo log bina link khola "completed" dabate the,
+ab unko KYA milta hai? — key bilkul nahi, kyunki bot server se
+check karta hai ki uska browser sach me VPLINK redirect se aaya
+hai ya nahi. Jab tak URL khud load nahi hota, key nahi milegi.
 
 ===============================================================
 OWNER KA FLOW
@@ -162,7 +174,8 @@ hoga, aur uski EARNING usi ko milegi.
    - "vplink_api" → apna apna VPLINK token
 3. Ab jab koi /key karega, bot khud uske token se ek chhota
    link (vplink.in/xxx) bana kar dikhata hai — user usse
-   kholta hai, phir button dabata hai. Earning token wale ko.
+   kholta hai, ad complete hoti hai, completion server verify
+   karta hai, aur key DM me automatically jati hai.
 
 Agar vplink_api khali hai, bot badle me aapka direct
 "shortener" URL hi dikhata hai (puraane jaisa).
@@ -184,12 +197,19 @@ Scenario 1 — VPLINK SE PAISE KAMANE HO:
   - "vplink_api" = TUMHARA apna VPLINK token (ad earning
                    TUMHARE account me aayegi)
 
-  Bot ab jab bhi /key karega ye karega:
-  1. VPLINK API se chhota link banayega, jaise:
-     https://vplink.in/Xh2kY9
-  2. User ko wo chhota link dikhega
-  3. User kholta hai → AD dikhti hai → page khulta hai
-  4. "I completed" dabata hai → key DM me mil jaata hai
+Bot ab jab bhi /key karega ye karega:
+   1. Server ek unique task (token) bana deta hai
+   2. VPLINK API se uske callback ka chhota link banega, jaise:
+      https://vplink.in/Xh2kY9
+   3. User ko wo chhota link dikhega
+   4. User kholta hai → AD ho rahi hai → page complete hota
+      hai → browser SERVER ke callback pe redirect hota hai
+   5. Server completion record karta hai → bot check karta hai
+      → key DM me automatically chali jati hai
+
+  Koi "I completed" button nahi — isliye fake click se key
+  NAHI milegi kyunki completion server ke browser-hit se verify
+  hota hai, button click se nahi.
 
 Scenario 2 — VPLINK NAHI, DIRECT SHORTENER LINK HI DO (gplinks / ouo / aadhar koi bhi):
 ---------------------------------------------------------------
@@ -217,11 +237,13 @@ YAAD RAKHO:
 
 
 LICENSE KEY vs USERNAME+PASSWORD (DM me kya jayega)
-===============================================================
+==============================================================
 
-- Normal users: config me "key_type":
-    "license"  → DM me License Key bhejta hai
-    "user"     → DM me Username + Password (unka login)
+- Normal users: /key dabate hi "What do you want?" — ek button:
+    "License Key"  → DM me License Key bhejta hai
+    "Username + Password" → DM me Username + Password
+  User jab bhi /key kare, khud choose karta hai. VPLINK link
+  complete karne ke baad hi key DM me aati hai (auto-verifierd).
 - Owner (/key kare to):
     Pehle choose karta hai: "License Key" ya
     "Username + Password" → phir duration.

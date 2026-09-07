@@ -13,4 +13,4 @@ Thumbs.db
 
 # build output
 IshuAuth_Package/examples/**/bin/
-IshuAuth_Package/examples/**/obj/
+IshuAuth_Package/examples/**/obj/DiscordBot_Package/config.json
