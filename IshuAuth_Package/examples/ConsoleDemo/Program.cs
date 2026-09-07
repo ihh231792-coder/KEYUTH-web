@@ -8,7 +8,7 @@ class Program
     private static readonly api KeyAuthApp = new api(
         name:    "APP-1LHEK3",
         ownerid: "IHH231792GMAILCOM-OFPDR",
-        secret:  "SEC-4C9F-2DB1-B7EA-0F58-9A41-D2E6-7B08-C53A",
+        secret:  "SEC_fV0a-6poU-U6sp-xmAN-Wimi-j3ZF-D2HE-d5Hh",
         version: "1.0"
     );
 
