@@ -10,3 +10,7 @@ __pycache__/
 # os / editors
 Thumbs.db
 .DS_Store
+
+# build output
+IshuAuth_Package/examples/**/bin/
+IshuAuth_Package/examples/**/obj/
