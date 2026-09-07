@@ -1,0 +1,153 @@
+===============================================================
+ISHU AUTH — DISCORD BOT INSTALL GUIDE
+GUID: 5B9E7C31-A8D4-4E2F-B6F1-2D0C9A84E573
+===============================================================
+
+IS bot ka source code hai jo aapke Discord server pe key
+generate karta hai. Normal users ke liye shortener + 48h key,
+aur owner ke liye permanent / custom expiry key.
+
+===============================================================
+SETPY STEP GUIDE (HINGLISH)
+===============================================================
+
+STEP 1 — Bot banao (Discord Developer Portal)
+  1. https://discord.com/developers/applications pe jao
+  2. "New Application" karo — apna naam do (ye aapka bot hoga)
+  3. "Bot" section me jao → "Add Bot"
+  4. Bot ka NAAM aur AVATAR set karo — ye aapka apna bot hoga,
+     kisi ka naam nahi
+  5. "Token" section me "Reset Token" karo → TOKEN COPY karo
+
+STEP 2 — Bot ko permissions do
+  1. "OAuth2" → "URL Generator" pe jao
+  2. Scopes me: applications.commands + bot select karo
+  3. Bot Permissions me: Send Messages + Embed Links + Use
+     Slash Commands select karo (ya Administrator)
+  4. Generated URL copy karo → browser me kholo → apne server
+     me Add karo
+
+STEP 3 — Config file edit karo
+  1. "config.example.json" ko copy karo → naam rakh lo
+     "config.json"
+  2. Isme ye values dalo:
+
+     token        → Discord bot ka token (Step 1 se)
+     owner_id     → apna Discord User ID (right click → Copy ID)
+                    (Developer Mode ON karo: Settings → Advanced)
+     server       → "https://keyuth-web.onrender.com" (default)
+     name         → apka ISHU AUTH App ID (e.g. APP-1LHEK3)
+     ownerid      → apka ISHU AUTH Owner ID
+     secret       → apka ISHU AUTH Secret
+     version      → apka version (e.g. "1.0")
+     shortener    → apka shortener link (VPN / gplinks / etc.)
+                    ye wo link hai jo user ko complete karna hai
+     key_hours    → key kitne ghante chalega (default 48)
+     cooldown_hours → user kitne ghante baad naya key le sakta
+                      hai (default 48)
+
+STEP 4 — Bot run karo
+  1. Python 3.9+ install hona chahiye
+  2. Terminal me jao is folder me
+  3. Install karo:
+     pip install -r requirements.txt
+  4. Run karo:
+     python bot.py
+  5. Bot online ho jayega → console me "Logged in as ..."
+
+===============================================================
+COMMANDS
+===============================================================
+
+/key      — Normal user: shortener link + 48h key
+            Owner: permanent / 48h / 7d / 30d / 365d options
+
+/mykey    — Apna current key aur expiry dikhata hai
+
+/status   — Check karo kitna time bacha hai next key ke liye
+
+===============================================================
+NORMAL USER KA FLOW
+===============================================================
+
+1. User /key type karta hai
+2. Bot usko shortener link deta hai (ephemeral msg)
+3. User shortener complete karta hai (captcha / vpn link)
+4. "I completed the link" button dabaata hai
+5. Bot 48h ka key generate karke DM karta hai
+6. 48h tak user dubara key nahi le sakta (/status se check)
+7. 48h ke baad dubara /key se process repeat
+
+===============================================================
+OWNER KA FLOW
+===============================================================
+
+1. Owner /key type karta hai
+2. Bot duration options dikhata hai:
+   - Permanent
+   - 48 hours
+   - 7 days
+   - 30 days
+   - 365 days
+3. Owner button dabata hai → key generate ho jaata hai
+4. Key automatically DM ya reply me dikhta hai
+
+===============================================================
+SHORTENER LINK KAHAN SE LAYEIN?
+===============================================================
+
+Ye aapka choice hai. Koi bhi URL shortener use kar sakte ho:
+
+- gplinks.com
+- shrinkme.io
+-ouo.io
+- VPN links
+- Apna koi custom captcha page
+
+Bot me "shortener" field me sirf URL dalo — jab user /key
+karega, usko ye link dikhega aur button milega.
+
+===============================================================
+IMPORTANT NOTES
+===============================================================
+
+- Bot ke NAAM aur AVATAR — Discord Developer Portal me set
+  karo. Ye aapka apna bot hai, kisi ka nahi.
+
+- Bot ke andar sirf config change karo — code me kuch mat
+  badlo.
+
+- data.json automatically ban jata hai — isme cooldown
+  data store hota hai. Isko delete mat karo.
+
+- agar bot band karke dubara chalao, sab data safe rahega.
+
+- server bot ko sirf 2 cheezein bhejta hai: auth values +
+  username. Koi token nahi, koi login nahi.
+
+===============================================================
+TROUBLESHOOTING
+===============================================================
+
+Problem: Bot slash commands nahi dikhte
+Solution: Bot restart karo. 1-2 minute wait karo.
+
+Problem: "Invalid ownerid/secret"
+Solution: config.json me name/ownerid/secret/version check
+          karo — ye match hona chahiye ISHU AUTH panel se.
+
+Problem: Key generate nahi ho raha
+Solution: server online hai? check:
+          https://keyuth-web.onrender.com/api/ping
+
+Problem: DM nahi ja raha
+Solution: User ko bot ko DM allow karna hoga ya bot
+          ephemeral msg me key deta hai.
+
+===============================================================
+SUPPORT
+===============================================================
+
+https://github.com/ihh231792-coder/KEYUTH-web
+
+===============================================================

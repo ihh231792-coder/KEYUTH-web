@@ -45,6 +45,7 @@ DUR_MS = {
     "6h": 6 * 3600 * 1000,
     "12h": 12 * 3600 * 1000,
     "24h": 24 * 3600 * 1000,
+    "48h": 48 * 3600 * 1000,
     "1d": 1 * 24 * 3600 * 1000,
     "3d": 3 * 24 * 3600 * 1000,
     "7d": 7 * 24 * 3600 * 1000,
@@ -239,6 +240,9 @@ class Handler(SimpleHTTPRequestHandler):
         if p.path == "/api/generate":
             return self._send_json(self._create_license(body))
 
+        if p.path == "/api/botkey":
+            return self._send_json(self._bot_key(body))
+
         if p.path == "/api/license/resethwid":
             return self._send_json(self._mutate(body, action="hwid"))
 
@@ -358,6 +362,66 @@ class Handler(SimpleHTTPRequestHandler):
         return ok(id=lic["id"], license_key=lic["license_key"], username=username,
                   expires=str(datetime.datetime.fromtimestamp(expires / 1000)) if expires else "permanent",
                   expires_at=expires)
+
+    # --- /api/botkey: upsert key for a named user (for Discord / Telegram bots) ---
+    def _bot_key(self, body):
+        key, appid, err, code = self._resolve_auth(body)
+        if err:
+            return fail(err, code)
+        username = body.get("username")
+        if not username:
+            return fail("username is required")
+        duration = body.get("duration") or "48h"
+        now = int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)
+        until = body.get("until")
+        if until is not None:
+            try:
+                expires = int(until)
+            except (TypeError, ValueError):
+                expires = None
+        else:
+            ms = DUR_MS.get(duration, 0)
+            expires = now + ms if ms else None
+        con = db()
+        existing = con.execute(
+            "SELECT * FROM licenses WHERE appid=? AND username=?", (appid, username)).fetchone()
+        if existing:
+            if existing["banned"]:
+                con.close()
+                return fail("user is banned")
+            new_key = gen_key("LIC")
+            con.execute(
+                "UPDATE licenses SET license_key=?, duration=?, expires_at=?, hwid=NULL,"
+                " hwid_locked=0, last_login=NULL, created_at=? WHERE id=?",
+                (new_key, "until-date" if until else duration, expires, now, existing["id"]))
+            con.commit(); con.close()
+            return ok(id=existing["id"], license_key=new_key, username=username,
+                      expires=str(datetime.datetime.fromtimestamp(expires / 1000)) if expires else "permanent",
+                      expires_at=expires, renewed=True)
+        ltype = body.get("type") or "license"
+        lic = {
+            "id": new_id(),
+            "appid": appid,
+            "username": username,
+            "password_hash": sha(body.get("password") or "") if ltype == "user" else None,
+            "type": ltype,
+            "license_key": gen_key("LIC"),
+            "hwid": None,
+            "hwid_locked": 0,
+            "duration": "until-date" if until else duration,
+            "expires_at": expires,
+            "created_at": now,
+            "last_login": None,
+            "banned": 0,
+        }
+        con.execute(
+            "INSERT INTO licenses (id,appid,username,password_hash,type,license_key,hwid,hwid_locked,duration,expires_at,created_at,last_login,banned)"
+            " VALUES (:id,:appid,:username,:password_hash,:type,:license_key,:hwid,:hwid_locked,:duration,:expires_at,:created_at,:last_login,:banned)",
+            lic)
+        con.commit(); con.close()
+        return ok(id=lic["id"], license_key=lic["license_key"], username=username,
+                  expires=str(datetime.datetime.fromtimestamp(expires / 1000)) if expires else "permanent",
+                  expires_at=expires, renewed=False)
 
     def _mutate(self, body, action, lic_id=None):
         key, appid, err, code = self._resolve_auth(body)
