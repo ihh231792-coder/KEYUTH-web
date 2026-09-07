@@ -205,6 +205,16 @@ YAAD RAKHO:
   - Token galat ho to short link nahi banega — bot phir bhi
     "shortener" wala link seedha dikha deta hai (kuch nahi toda)
 
+   CONFUSION (ye sabse common hai):
+   "shortener" me VPLINK ka chhota link (vplink.in/xxx) NAHI,
+   wo FINAL destination URL daala jaata hai jahan user ad ke
+   baad pahunchta hai. Chhota link bot HUD banata hai.
+   Jaise:
+     shortener = https://yoursite.com/download-page
+     vplink_api = 7d75a5c9716a7dd3df75964f59249d780b3f199a
+   → User dekhta hai vplink.in/xxxxx (ad) → phir
+     https://yoursite.com/download-page khulta hai
+
 
 LICENSE KEY vs USERNAME+PASSWORD (DM me kya jayega)
 ===============================================================
