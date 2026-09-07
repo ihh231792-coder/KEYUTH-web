@@ -1,0 +1,15 @@
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\bin\Release\net9.0\IshuAuthDemo.exe
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\bin\Release\net9.0\IshuAuthDemo.deps.json
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\bin\Release\net9.0\IshuAuthDemo.runtimeconfig.json
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\bin\Release\net9.0\IshuAuthDemo.dll
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\bin\Release\net9.0\IshuAuthDemo.pdb
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\ConsoleDemo.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\ConsoleDemo.AssemblyInfoInputs.cache
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\ConsoleDemo.AssemblyInfo.cs
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\ConsoleDemo.csproj.CoreCompileInputs.cache
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\ConsoleDemo.sourcelink.json
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\IshuAuthDemo.dll
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\refint\IshuAuthDemo.dll
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\IshuAuthDemo.pdb
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\ConsoleDemo.genruntimeconfig.cache
+C:\Users\pc\Desktop\KEYUTH-web\IshuAuth_Package\examples\ConsoleDemo\obj\Release\net9.0\ref\IshuAuthDemo.dll

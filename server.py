@@ -76,9 +76,14 @@ def db_init():
     con.execute("""
         CREATE TABLE IF NOT EXISTS owners (
             api_key TEXT, appid TEXT, appname TEXT, owner_label TEXT,
+            owner_id TEXT, secret TEXT, version TEXT,
             PRIMARY KEY (api_key, appid)
         )
     """)
+    ocols = [r[1] for r in con.execute("PRAGMA table_info(owners)")]
+    for _col in ("owner_id", "secret", "version"):
+        if _col not in ocols:
+            con.execute("ALTER TABLE owners ADD COLUMN %s TEXT" % _col)
     con.execute("""
         CREATE TABLE IF NOT EXISTS licenses (
             id TEXT PRIMARY KEY,
@@ -210,10 +215,15 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json(fail("key and appid required"))
             con = db()
             con.execute(
-                "INSERT OR REPLACE INTO owners (api_key, appid, appname, owner_label) VALUES (?,?,?,?)",
-                (key, appid, appname or "", key[:12]))
+                "INSERT OR REPLACE INTO owners (api_key, appid, appname, owner_label, owner_id, secret, version)"
+                " VALUES (?,?,?,?,?,?,?)",
+                (key, appid, appname or "", key[:12],
+                 body.get("ownerid") or None, body.get("secret") or None, body.get("version") or None))
             con.commit(); con.close()
             return self._send_json(ok(appid=appid))
+
+        if p.path == "/api/init":
+            return self._send_json(self._init(body))
 
         if p.path == "/api/license":
             return self._send_json(self._create_license(body))
@@ -250,10 +260,51 @@ class Handler(SimpleHTTPRequestHandler):
         con.close()
         return bool(owner)
 
-    def _create_license(self, body):
+    # KeyAuth-style: {ownerid, secret, name} instead of {key, appid}
+    def _resolve_auth(self, body):
         key = body.get("key"); appid = body.get("appid")
+        ownerid = body.get("ownerid"); secret = body.get("secret")
+        if ownerid and secret:
+            name = body.get("name") or ""
+            con = db()
+            if name:
+                owner = con.execute(
+                    "SELECT api_key, appid FROM owners WHERE owner_id=? AND secret=?"
+                    " AND (appname=? OR appid=?)",
+                    (ownerid, secret, name, name)).fetchone()
+            else:
+                owner = con.execute(
+                    "SELECT api_key, appid FROM owners WHERE owner_id=? AND secret=?",
+                    (ownerid, secret)).fetchone()
+            con.close()
+            if not owner:
+                return (None, None, "invalid ownerid/secret", 401)
+            key, appid = owner["api_key"], owner["appid"]
+        if not key or not appid:
+            return (None, None, "missing key/appid (or ownerid/secret)", 401)
         if not self._authorize(key, appid):
-            return fail("invalid key/appid", 401)
+            return (None, None, "invalid key/appid", 401)
+        return (key, appid, None, None)
+
+    def _owner_name(self, key, appid):
+        con = db()
+        o = con.execute("SELECT appname FROM owners WHERE api_key=? AND appid=?",
+                        (key, appid)).fetchone()
+        con.close()
+        return o["appname"] if o and o["appname"] else ""
+
+    def _init(self, body):
+        key, appid, err, code = self._resolve_auth(body)
+        if err:
+            return fail(err, code)
+        version = (body.get("version") or "").strip()
+        return ok(success=True, message="app initialized", appid=appid,
+                  appname=self._owner_name(key, appid), version=version)
+
+    def _create_license(self, body):
+        key, appid, err, code = self._resolve_auth(body)
+        if err:
+            return fail(err, code)
         username = (body.get("username") or "").strip()
         if not username:
             return fail("username required")
@@ -301,9 +352,9 @@ class Handler(SimpleHTTPRequestHandler):
                   expires_at=expires)
 
     def _mutate(self, body, action, lic_id=None):
-        key = body.get("key"); appid = body.get("appid")
-        if not self._authorize(key, appid):
-            return fail("invalid key/appid", 401)
+        key, appid, err, code = self._resolve_auth(body)
+        if err:
+            return fail(err, code)
         lid = lic_id or body.get("id")
         if not lid:
             return fail("id required")
@@ -342,12 +393,12 @@ class Handler(SimpleHTTPRequestHandler):
         return ok(message=msg)
 
     def _verify(self, body):
-        key = body.get("key"); appid = body.get("appid")
+        key, appid, err, code = self._resolve_auth(body)
+        if err:
+            return fail(err, code)
         user = (body.get("user") or "").strip()
         password = body.get("pass") or ""
         hwid = body.get("hwid") or None
-        if not self._authorize(key, appid):
-            return fail("invalid key/appid", 401)
         con = db()
         row = con.execute(
             "SELECT * FROM licenses WHERE appid=? AND (username=? OR license_key=?)",

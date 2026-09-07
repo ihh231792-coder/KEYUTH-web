@@ -602,7 +602,7 @@ async function renderUsers() {
   let list;
   if (SERVER_ONLINE && appId) {
     const app = Apps.get(appId);
-    await svc('api/bootstrap', jsonOpts('POST', { key: ME.apiKey, appid: app.appId, appname: app.name }));
+    await svc('api/bootstrap', jsonOpts('POST', { key: ME.apiKey, appid: app.appId, appname: app.name, ownerid: ME.ownerId, secret: ME.secretId, version: app.version }));
     const j = await svc('api/licenses?appid=' + encodeURIComponent(app.appId), { headers: { 'x-api-key': ME.apiKey } });
     list = (j.list || []).map(x => normalizeFromServer(x));
   } else if (SERVER_ONLINE && !appId) {

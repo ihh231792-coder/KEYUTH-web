@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>IshuAuthDemo</AssemblyName>
+    <RootNamespace>IshuAuthDemo</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- "the package": just add this one file to any project -->
+    <Compile Include="..\..\ISHU_Auth_API.cs" Link="ISHU_Auth_API.cs" />
+  </ItemGroup>
+
+</Project>
