@@ -494,6 +494,7 @@ class Handler(SimpleHTTPRequestHandler):
             msg = "banned" if banned else "unbanned"
         else:  # delete
             con.execute("DELETE FROM licenses WHERE id=?", (lid,))
+            PRESENCE.get(appid, {}).pop(row["username"], None)
             con.commit(); con.close()
             return ok(message="deleted")
         con.commit(); con.close()
