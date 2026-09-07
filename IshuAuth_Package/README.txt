@@ -1,11 +1,16 @@
 ISHU AUTH - C# PACKAGE
 ======================
 Author: ISHU
+PACKAGE GUID : 8CD236B4-A8C4-417D-AEDD-3B4D91CDB61B
+NAMESPACE    : ISHU_Auth
+CLASS        : api (in ISHU_Auth_API.cs) / IshuAuth (in IshuAuth.cs)
 
 What's inside?
-  IshuAuth.cs   -> main SDK (drop this into your project)
-  Example.cs    -> full working example
-  README.txt    -> this file
+  IshuAuth.cs       -> main SDK (drop this into your project)
+  ISHU_Auth_API.cs  -> KeyAuth-style SDK - name/ownerid/secret/version
+  Example.cs        -> full working example
+  INSTALL-GUIDE.txt -> step-by-step install & use guide (with GUID)
+  README.txt        -> this file
 
 INSTALL (do you need any package? NO)
 -------------------------------------

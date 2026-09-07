@@ -2,6 +2,8 @@
 //   ISHU AUTH - SDK (C#)  API-KEY LOGIN CLASS
 //   Drop this one file into your project. No package needed.
 // -------------------------------------------------------------
+//   PACKAGE GUID : 8CD236B4-A8C4-417D-AEDD-3B4D91CDB61B
+// -------------------------------------------------------------
 //   USE (same flow as other auth systems — 4 values, no API key):
 //     public static api IshuAuthApp = new api(
 //         name:    "APP-XXXXXX",       // your app id or app name
