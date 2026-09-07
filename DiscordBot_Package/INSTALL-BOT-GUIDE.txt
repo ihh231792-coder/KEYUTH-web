@@ -42,10 +42,15 @@ STEP 3 — Config file edit karo
      version      → apka version (e.g. "1.0")
      shortener    → wo LONG destination URL jo user ko khulna
                     hai (aapka VPN / site / video link)
-     vplink_api   → (optional) VPLINK API token. Agar bharte ho
-                    to bot har /key par SHORTENER ka auto chhota
-                    link (vplink.in) bana deta hai.
+     vplink_api   → (recommended) AAPKA APNA VPLINK API token.
+                    Har owner ka APNA shortener account hota hai —
+                    isi se unki EARNING unhe milti hai.
                     VPLINK token yahan se: https://vplink.in
+                    Ya koi bhi: gplinks / shrinkme / VPN link —
+                    jo bhi SYSTEM use karoge, uska token yahan.
+     key_type     → normal users ko kya milega:
+                    "license"  = License Key (sirf key)
+                    "user"     = Username + Password (login wala)
      key_hours    → key kitne ghante chalega (default 48)
      cooldown_hours → user kitne ghante baad naya key le sakta
                       hai (default 48)
@@ -88,7 +93,10 @@ OWNER KA FLOW
 ===============================================================
 
 1. Owner /key type karta hai
-2. Bot duration options dikhata hai:
+2. Bot puchta hai kya banana hai:
+   - License Key  (key only)
+   - Username + Password  (login wala)
+3. Phir duration chunta hai:
    - Permanent
    - 48 hours
    - 7 days
@@ -96,8 +104,10 @@ OWNER KA FLOW
    - 365 days
    - Custom days  ← koi bhi din daalo (1 se 3650 tak),
                      jaise 1 din, 2 din, 3 din, 10 din, 90 din
-3. Owner button dabata hai → key generate ho jaata hai
-4. Key automatically DM ya reply me dikhta hai
+4. Owner button dabata hai → key generate ho jaata hai
+5. Key DM ya reply me dikhta hai:
+   - License key → License Key
+   - User+Pass  → Username + Password (dono milte hain)
 
 NOTE — OWNER ka naya “Custom days” option:
 “Custom days” pe click karo → ek box khulega → jitne din chahiye
@@ -109,18 +119,36 @@ ya exact kitne bhi din ka.
 VPLINK AUTO-SHORTENER (OPTIONAL)
 ===============================================================
 
-Agar aapke paas VPLINK API token hai:
-1. https://vplink.in pe account banao → API section me token
-   copy karo
+Har owner KA APNA shortener account hota hai — aapka token MERE
+token se bilkul alag hai. Jo bhi bot banayega, uska APNA token
+hoga, aur uski EARNING usi ko milegi.
+
+1. https://vplink.in pe account banao → API section me apna
+   token copy karo (aapke use case ke hisaab se: VP link,
+   GP link, kuch bhi — jo system use karoge uska token)
 2. config.json me:
    - "shortener"  → wo ASLI LONG URL jo khulna hai
-   - "vplink_api" → aapka VPLINK token
-3. Ab jab koi /key karega, bot khud VPLINK se ek fresh chhota
+   - "vplink_api" → apna apna VPLINK token
+3. Ab jab koi /key karega, bot khud uske token se ek chhota
    link (vplink.in/xxx) bana kar dikhata hai — user usse
-   kholta hai, phir button dabata hai.
+   kholta hai, phir button dabata hai. Earning token wale ko.
 
 Agar vplink_api khali hai, bot badle me aapka direct
 "shortener" URL hi dikhata hai (puraane jaisa).
+
+LICENSE KEY vs USERNAME+PASSWORD (DM me kya jayega)
+===============================================================
+
+- Normal users: config me "key_type":
+    "license"  → DM me License Key bhejta hai
+    "user"     → DM me Username + Password (unka login)
+- Owner (/key kare to):
+    Pehle choose karta hai: "License Key" ya
+    "Username + Password" → phir duration.
+    Isliye owner dono bana sakta hai, dono DM/reply me
+    milta hai, aur Custom days se kitne din ka bhi.
+
+
 
 BOT TOKEN AUR OWNER ID KAHAN?
 - Discord bot token: https://discord.com/developers/applications

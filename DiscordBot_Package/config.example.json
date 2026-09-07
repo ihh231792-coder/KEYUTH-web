@@ -8,6 +8,7 @@
   "version": "1.0",
   "shortener": "https://your-long-destination-url.com",
   "vplink_api": "",
+  "key_type": "license",
   "key_hours": 48,
   "cooldown_hours": 48
 }

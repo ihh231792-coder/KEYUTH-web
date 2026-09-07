@@ -3,7 +3,7 @@ Discord Key Bot — ISHU AUTH integration
 Slash /key command: owner gets permanent/custom-expiry options; normal users get a 48-hour
 key after completing a shortener link.
 """
-import os, json, time, asyncio
+import os, json, time, asyncio, secrets
 from pathlib import Path
 
 import aiohttp
@@ -27,6 +27,7 @@ VPLINK_API = CFG.get("vplink_api", "")    # VPLINK API token (optional but recom
 BOT_OWNER = int(CFG.get("owner_id", 0))   # Discord user id of the admin
 KEY_HOURS = int(CFG.get("key_hours", 48))
 COOLDOWN_HOURS = int(CFG.get("cooldown_hours", 48))
+KEY_TYPE = CFG.get("key_type", "license")   # "license" (key only) or "user" (username+password)
 
 
 # ── Persistent data ─────────────────────────────────────────────────────────
@@ -45,13 +46,19 @@ DATA = _load_data()
 
 
 # ── API helper ──────────────────────────────────────────────────────────────
-async def _botkey(username: str, duration: str = "48h"):
+def _passwd() -> str:
+    return "UP-" + secrets.token_hex(4).upper()
+
+async def _botkey(username: str, duration: str = "48h", ltype: str = "license", password: str | None = None):
     payload = {
         "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
         "username": username, "duration": duration, "lock": True,
+        "type": ltype,
     }
+    if ltype == "user":
+        payload["password"] = password or _passwd()
     async with aiohttp.ClientSession() as s:
-        async with s.post(f"{SERVER}/api/botkey", json=payload, timeout=aiohttp.ClientTimeout(total=20)) as r:
+        async with s.post(f"{SERVER}/api/botkey", json=payload, timeout=aiohttp.ClientTimeout(total=25)) as r:
             return await r.json()
 
 
@@ -98,6 +105,14 @@ def _format_time(seconds: float) -> str:
     return f"{m}m {s}s"
 
 
+def _fmt_issue(data: dict) -> str:
+    """Format the issued key for DM — license key OR username/password."""
+    if data.get("type") == "user":
+        return (f"**Username**\n`{data.get('username', '')}`\n"
+                f"**Password**\n`{data.get('password', '')}`")
+    return f"**License Key**\n`{data.get('license_key', '')}`"
+
+
 # ── Bot setup ───────────────────────────────────────────────────────────────
 intents = discord.Intents.default()
 intents.members = True
@@ -125,32 +140,36 @@ class ShortenerView(ui.View):
 
         await interaction.response.defer(ephemeral=True)
         username = f"dc_{self.user_id}"
-        data = await _botkey(username, duration=f"{KEY_HOURS}h")
+        data = await _botkey(username, duration=f"{KEY_HOURS}h", ltype=KEY_TYPE)
 
         if not data.get("ok"):
             return await interaction.followup.send("Failed to generate key. Try again later.", ephemeral=True)
 
-        key = data.get("license_key", "")
+        body = _fmt_issue(data)
         expires = data.get("expires", "")
 
         DATA["cooldowns"][str(self.user_id)] = time.time()
-        DATA["last_keys"][str(self.user_id)] = {"key": key, "expires": expires}
+        DATA["last_keys"][str(self.user_id)] = {"body": body, "expires": expires}
         _save_data(DATA)
 
         try:
             await interaction.user.send(
-                f"**Your {KEY_HOURS}h key**\n`{key}`\nExpires: {expires}"
+                f"{body}\nExpires: {expires}"
             )
             await interaction.followup.send("Sent your key via DM!", ephemeral=True)
         except discord.Forbidden:
             await interaction.followup.send(
-                f"**Your {KEY_HOURS}h key**\n`{key}`\nExpires: {expires}\n\n*Could not DM you — please enable DMs.*",
+                f"{body}\nExpires: {expires}\n\n*Could not DM you — please enable DMs.*",
                 ephemeral=True,
             )
 
 
 class CustomDaysModal(ui.Modal, title="Custom key duration"):
     days = ui.TextInput(label="Number of days", placeholder="e.g. 2, 5, 10, 90", max_length=5)
+
+    def __init__(self, ltype: str = "license"):
+        super().__init__()
+        self.ltype = ltype
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -164,73 +183,71 @@ class CustomDaysModal(ui.Modal, title="Custom key duration"):
         username = f"dc_{interaction.user.id}"
         from datetime import datetime, timezone, timedelta
         until = int((datetime.now(timezone.utc) + timedelta(days=n)).timestamp() * 1000)
-        payload = {
-            "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
-            "username": username, "duration": "custom", "until": until, "lock": True,
-        }
-        async with aiohttp.ClientSession() as s:
-            async with s.post(f"{SERVER}/api/botkey", json=payload,
-                              timeout=aiohttp.ClientTimeout(total=20)) as r:
-                data = await r.json()
+        ltype = self.ltype
+        data = await _botkey(username, duration="custom", ltype=ltype,
+                             password=_passwd() if ltype == "user" else None)
         if not data.get("ok"):
             return await interaction.followup.send("API error.", ephemeral=True)
         await interaction.followup.send(
-            f"Key: `{data.get('license_key')}`\nExpires: {data.get('expires')}\nDays: {n}", ephemeral=True)
+            f"{_fmt_issue(data)}\nExpires: {data.get('expires')}\nDays: {n}", ephemeral=True)
+
+
+class OwnerTypeView(ui.View):
+    """Owner picks what to issue: license key or username+password."""
+    def __init__(self):
+        super().__init__(timeout=120)
+
+    @ui.button(label="License Key", style=discord.ButtonStyle.primary, emoji="\U0001f511")
+    async def on_license(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_message(
+            "Choose a duration:", view=OwnerDurationView("license"), ephemeral=True)
+
+    @ui.button(label="Username + Password", style=discord.ButtonStyle.success, emoji="\U0001f465")
+    async def on_user(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_message(
+            "Choose a duration:", view=OwnerDurationView("user"), ephemeral=True)
 
 
 class OwnerDurationView(ui.View):
     """Shown to the bot owner — choose key duration."""
-    def __init__(self):
+    def __init__(self, ltype: str = "license"):
         super().__init__(timeout=120)
+        self.ltype = ltype
+
+    async def _issue(self, interaction: discord.Interaction, duration: str):
+        await interaction.response.defer(ephemeral=True)
+        username = f"dc_{interaction.user.id}"
+        ltype = self.ltype
+        data = await _botkey(username, duration=duration, ltype=ltype,
+                             password=_passwd() if ltype == "user" else None)
+        if not data.get("ok"):
+            return await interaction.followup.send("API error.", ephemeral=True)
+        await interaction.followup.send(
+            f"{_fmt_issue(data)}\nExpires: {data.get('expires') or 'permanent'}", ephemeral=True)
 
     @ui.button(label="Permanent", style=discord.ButtonStyle.danger, emoji="\U0001f512")
     async def on_permanent(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        username = f"dc_{interaction.user.id}"
-        data = await _botkey(username, duration="permanent")
-        if not data.get("ok"):
-            return await interaction.followup.send("API error.", ephemeral=True)
-        await interaction.followup.send(f"Key: `{data.get('license_key')}`\nExpires: **permanent**", ephemeral=True)
+        await self._issue(interaction, "permanent")
 
     @ui.button(label="48 hours", style=discord.ButtonStyle.primary, emoji="\u23f0")
     async def on_48h(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        username = f"dc_{interaction.user.id}"
-        data = await _botkey(username, duration="48h")
-        if not data.get("ok"):
-            return await interaction.followup.send("API error.", ephemeral=True)
-        await interaction.followup.send(f"Key: `{data.get('license_key')}`\nExpires: {data.get('expires')}", ephemeral=True)
+        await self._issue(interaction, "48h")
 
     @ui.button(label="7 days", style=discord.ButtonStyle.primary, emoji="\U0001f4c5")
     async def on_7d(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        username = f"dc_{interaction.user.id}"
-        data = await _botkey(username, duration="7d")
-        if not data.get("ok"):
-            return await interaction.followup.send("API error.", ephemeral=True)
-        await interaction.followup.send(f"Key: `{data.get('license_key')}`\nExpires: {data.get('expires')}", ephemeral=True)
+        await self._issue(interaction, "7d")
 
     @ui.button(label="30 days", style=discord.ButtonStyle.primary, emoji="\U0001f4c6")
     async def on_30d(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        username = f"dc_{interaction.user.id}"
-        data = await _botkey(username, duration="30d")
-        if not data.get("ok"):
-            return await interaction.followup.send("API error.", ephemeral=True)
-        await interaction.followup.send(f"Key: `{data.get('license_key')}`\nExpires: {data.get('expires')}", ephemeral=True)
+        await self._issue(interaction, "30d")
 
     @ui.button(label="365 days", style=discord.ButtonStyle.primary, emoji="\U0001f4c5")
     async def on_365d(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        username = f"dc_{interaction.user.id}"
-        data = await _botkey(username, duration="1y")
-        if not data.get("ok"):
-            return await interaction.followup.send("API error.", ephemeral=True)
-        await interaction.followup.send(f"Key: `{data.get('license_key')}`\nExpires: {data.get('expires')}", ephemeral=True)
+        await self._issue(interaction, "1y")
 
     @ui.button(label="Custom days", style=discord.ButtonStyle.secondary, emoji="\U0001f4c8")
     async def on_custom(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.send_modal(CustomDaysModal())
+        await interaction.response.send_modal(CustomDaysModal(self.ltype))
 
 
 # ── /key command ────────────────────────────────────────────────────────────
@@ -239,7 +256,7 @@ async def key_cmd(interaction: discord.Interaction):
     # Owner path
     if interaction.user.id == BOT_OWNER:
         return await interaction.response.send_message(
-            "You are the owner. Choose a duration:", view=OwnerDurationView(), ephemeral=True
+            "You are the owner. Choose what to issue:", view=OwnerTypeView(), ephemeral=True
         )
 
     # Normal user path — cooldown check
@@ -268,7 +285,7 @@ async def mykey_cmd(interaction: discord.Interaction):
     if not info:
         return await interaction.response.send_message("You don't have a key yet. Use `/key` to get one.", ephemeral=True)
     await interaction.response.send_message(
-        f"**Your key**\n`{info['key']}`\nExpires: {info['expires']}", ephemeral=True
+        f"**Your key**\n{info['body']}\nExpires: {info['expires']}", ephemeral=True
     )
 
 

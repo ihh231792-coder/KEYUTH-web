@@ -425,20 +425,28 @@ class Handler(SimpleHTTPRequestHandler):
                 return fail("user is banned")
             new_key = gen_key("LIC")
             hwlocked = 1 if _flag(body.get("lock"), True) else 0
+            password = body.get("password") or ""
             con.execute(
                 "UPDATE licenses SET license_key=?, duration=?, expires_at=?, hwid=NULL,"
-                " hwid_locked=?, last_login=NULL, created_at=? WHERE id=?",
-                (new_key, "until-date" if until else duration, expires, hwlocked, now, existing["id"]))
+                " hwid_locked=?, last_login=NULL, created_at=?,"
+                " type=?, password_hash=? WHERE id=?",
+                (new_key, "until-date" if until else duration, expires, hwlocked, now,
+                 body.get("type") or existing["type"],
+                 sha(password) if (body.get("type") or existing["type"]) == "user" else None,
+                 existing["id"]))
             con.commit(); con.close()
             return ok(id=existing["id"], license_key=new_key, username=username,
+                      password=password if (body.get("type") or existing["type"]) == "user" else None,
+                      type=body.get("type") or existing["type"],
                       expires=str(datetime.datetime.fromtimestamp(expires / 1000)) if expires else "permanent",
                       expires_at=expires, renewed=True)
         ltype = body.get("type") or "license"
+        password = body.get("password") or ""
         lic = {
             "id": new_id(),
             "appid": appid,
             "username": username,
-            "password_hash": sha(body.get("password") or "") if ltype == "user" else None,
+            "password_hash": sha(password) if ltype == "user" else None,
             "type": ltype,
             "license_key": gen_key("LIC"),
             "hwid": None,
@@ -455,6 +463,8 @@ class Handler(SimpleHTTPRequestHandler):
             lic)
         con.commit(); con.close()
         return ok(id=lic["id"], license_key=lic["license_key"], username=username,
+                  password=password if ltype == "user" else None,
+                  type=ltype,
                   expires=str(datetime.datetime.fromtimestamp(expires / 1000)) if expires else "permanent",
                   expires_at=expires, renewed=False)
 

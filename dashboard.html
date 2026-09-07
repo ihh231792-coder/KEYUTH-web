@@ -299,6 +299,7 @@ async function pingServer() {
     ? '<span class="badge-live">● ' + t('sqlite_live') + '</span>'
     : '<span class="badge-ready">● ' + t('local_storage') + '</span>';
   renderUsers();
+  if (SERVER_ONLINE) loadStats();
 }
 async function svc(path, opts) {
   try {
