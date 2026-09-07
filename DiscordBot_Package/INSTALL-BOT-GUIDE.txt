@@ -51,9 +51,40 @@ STEP 3 — Config file edit karo
      key_type     → normal users ko kya milega:
                     "license"  = License Key (sirf key)
                     "user"     = Username + Password (login wala)
-     key_hours    → key kitne ghante chalega (default 48)
-     cooldown_hours → user kitne ghante baad naya key le sakta
-                      hai (default 48)
+key_hours    → key kitne ghante chalega (default 48)
+      cooldown_hours → user kitne ghante baad naya key le sakta
+                       hai (default 48)
+
+   FULL EXAMPLE — config.json aise dikhega (sab values bhari hui):
+   --------------------------------------------------------------
+   {
+     "token": "MTIzNDU2Nzg5MDEyMzQ1Njc4.OuZt_AbCdEfGhIjKlMnOp",
+     "owner_id": 123456789012345678,
+     "server": "https://keyuth-web.onrender.com",
+     "name": "APP-1LHEK3",
+     "ownerid": "IHH231792GMAILCOM-OFPDR",
+     "secret": "SEC_fV0a-6poU-U6sp-xmAN-Wimi-j3ZF-D2HE-d5Hh",
+     "version": "1.0",
+     "shortener": "https://yoursite.com/download-page",
+     "vplink_api": "3d22217f8c1b0d9faf78c89bccb1b35dd9ad3064",
+     "key_type": "license",
+     "key_hours": 48,
+     "cooldown_hours": 48
+   }
+
+   Upar ki har value ko bot.py is tarah padhata hai:
+     SERVER         ← config.json ka "server"      (API server ka URL)
+     NAME           ← "name"     (tumhari App ID)
+     OWNERID        ← "ownerid"  (tumhara Owner ID)
+     SECRET         ← "secret"   (tumhara Secret)
+     VERSION        ← "version"  (tumhara version)
+     SHORTENER      ← "shortener" (destination link jo user ko khule)
+     VPLINK_API     ← "vplink_api" (tumhara apna VPLINK token)
+     BOT_OWNER      ← "owner_id" (Discord user ID — owner commands
+                                   sirf isi ko milte hain)
+     KEY_HOURS      ← "key_hours"     (default 48)
+     COOLDOWN_HOURS ← "cooldown_hours" (default 48)
+     KEY_TYPE       ← "key_type"      ("license" ya "user")
 
 STEP 4 — Bot run karo
   1. Python 3.9+ install hona chahiye
