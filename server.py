@@ -213,14 +213,22 @@ class Handler(SimpleHTTPRequestHandler):
             key = body.get("key"); appid = body.get("appid"); appname = body.get("appname")
             if not key or not appid:
                 return self._send_json(fail("key and appid required"))
+            ownerid = body.get("ownerid"); secret = body.get("secret"); version = body.get("version")
             con = db()
+            # keep the first-registered secret/ownerid as the canonical one
+            existing = con.execute(
+                "SELECT owner_id, secret FROM owners WHERE api_key=? AND appid=?",
+                (key, appid)).fetchone()
+            if existing and existing["secret"]:
+                secret = existing["secret"]
+            if existing and existing["owner_id"]:
+                ownerid = existing["owner_id"]
             con.execute(
                 "INSERT OR REPLACE INTO owners (api_key, appid, appname, owner_label, owner_id, secret, version)"
                 " VALUES (?,?,?,?,?,?,?)",
-                (key, appid, appname or "", key[:12],
-                 body.get("ownerid") or None, body.get("secret") or None, body.get("version") or None))
+                (key, appid, appname or "", key[:12], ownerid, secret, version))
             con.commit(); con.close()
-            return self._send_json(ok(appid=appid))
+            return self._send_json(ok(appid=appid, owner_id=ownerid, secret=secret, version=version, appname=appname))
 
         if p.path == "/api/init":
             return self._send_json(self._init(body))

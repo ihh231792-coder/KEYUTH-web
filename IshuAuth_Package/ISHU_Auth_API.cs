@@ -75,15 +75,78 @@ namespace ISHU_Auth
             });
         }
 
+        // ---------- FULL CONTROL (same as the panel, straight from code) ----------
+        // Create / Delete / Ban / Renew / ResetHwid — all with the same
+        // name + ownerid + secret. "license" param: TRUE = license-key account,
+        // FALSE (default) = username + password account.
+        public data Create(string username, string password, string duration = "30d",
+                           bool license = false)
+        {
+            return response = Call("/api/license", new Dictionary<string, string>
+            {
+                ["name"] = name, ["ownerid"] = ownerid, ["secret"] = secret, ["version"] = version,
+                ["username"] = username, ["password"] = password ?? "",
+                ["type"] = license ? "license" : "user", ["duration"] = duration
+            });
+        }
+
+        // One-line key generator: returns the new LIC_... key (or "" on error).
+        public string CreateKey(string duration = "7d")
+        {
+            Create("k" + Guid.NewGuid().ToString("N").Substring(0, 10), null, duration, true);
+            return response.success ? response.license_key : "";
+        }
+
+        public data Delete(string id)
+        {
+            return response = CallRaw("DELETE", "/api/license/" + id, new Dictionary<string, string>
+            {
+                ["name"] = name, ["ownerid"] = ownerid, ["secret"] = secret, ["id"] = id
+            });
+        }
+
+        public data Ban(string id, bool banned = true)
+        {
+            return response = Call("/api/license/ban", new Dictionary<string, string>
+            {
+                ["name"] = name, ["ownerid"] = ownerid, ["secret"] = secret, ["version"] = version,
+                ["id"] = id, ["banned"] = banned ? "true" : "false"
+            });
+        }
+
+        public data Renew(string id, string duration = "30d")
+        {
+            return response = Call("/api/license/renew", new Dictionary<string, string>
+            {
+                ["name"] = name, ["ownerid"] = ownerid, ["secret"] = secret, ["version"] = version,
+                ["id"] = id, ["duration"] = duration
+            });
+        }
+
+        public data ResetHwid(string id)
+        {
+            return response = Call("/api/license/resethwid", new Dictionary<string, string>
+            {
+                ["name"] = name, ["ownerid"] = ownerid, ["secret"] = secret, ["version"] = version,
+                ["id"] = id
+            });
+        }
+
         // ---------- internals ----------
         static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
 
         static data Call(string path, Dictionary<string, string> fields)
         {
+            return CallRaw("POST", path, fields);
+        }
+
+        static data CallRaw(string method, string path, Dictionary<string, string> fields)
+        {
             try
             {
                 using var content = new FormUrlEncodedContent(fields);
-                var res = _http.PostAsync(Server + path, content).GetAwaiter().GetResult();
+                var msg = new HttpRequestMessage(new HttpMethod(method), Server + path) { Content = content };
+                var res = _http.SendAsync(msg).GetAwaiter().GetResult();
                 string json = res.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 return new data
                 {
@@ -92,7 +155,9 @@ namespace ISHU_Auth
                     message = GrabField(json, "message"),
                     username = GrabField(json, "username"),
                     expiry = GrabField(json, "expires"),
-                    appid = GrabField(json, "appid")
+                    appid = GrabField(json, "appid"),
+                    license_key = GrabField(json, "license_key"),
+                    id = GrabField(json, "id")
                 };
             }
             catch (Exception ex)
@@ -130,5 +195,7 @@ namespace ISHU_Auth
         public string username { get; set; } = "";
         public string expiry { get; set; } = "";
         public string appid { get; set; } = "";
+        public string license_key { get; set; } = "";
+        public string id { get; set; } = "";
     }
 }
