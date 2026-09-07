@@ -168,8 +168,21 @@
       </div>
 
       <div class="card" style="margin-bottom:20px;border-left:3px solid var(--accent-2)">
-        <h3 data-i18n="your_values"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Your values — copy these to your client</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+          <h3 data-i18n="your_values"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Your values — copy these to your client</h3>
+          <label class="switch" title="Show a ready copy-paste code snippet">
+            <span data-i18n="snippet_toggle">Display code snippet</span>
+            <input type="checkbox" id="snippetToggle" onchange="toggleSnippet(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
         <div class="detail-rows" id="installRows" style="margin-top:12px"></div>
+        <div id="snippetBox" style="display:none;margin-top:14px">
+          <div class="code-block" style="position:relative">
+            <span class="cp"><button class="copy-btn" onclick="copySnippet(this)">COPY</button></span>
+            <pre id="snippetPre" class="snippet-pre"></pre>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="margin-bottom:20px;border-left:3px solid var(--accent)">
@@ -842,6 +855,28 @@ function createUserServer(type) {
 }
 
 /* ============ Installation ============ */
+function buildSnippet(app) {
+  const ni = (v) => v || 'APP-XXXXXX';
+  return `using ISHU_Auth;
+
+public static api KeyAuthApp = new api(
+    name:    "${ni(app.appId)}",
+    ownerid: "${ni(ME.ownerId)}",
+    secret:  "${ni(ME.secretId)}",
+    version: "${ni(ME.version)}"
+);`;
+}
+function toggleSnippet(on) {
+  const box = el('snippetBox');
+  const rows = el('installRows');
+  if (!box) return;
+  box.style.display = on ? 'block' : 'none';
+  if (rows) rows.style.display = on ? 'none' : '';
+}
+function copySnippet(btn) {
+  const pre = el('snippetPre');
+  if (pre) copyText(pre.textContent, btn);
+}
 function appsSel() { const a = Apps.all(); return a.length ? a[0].appId : 'APP-XXXXXX'; }
 
 const CODES = {
@@ -941,6 +976,11 @@ function renderInstall() {
       ? `<div class="dv blurred" title="click to reveal + copy" onclick="toggleSecret(this,'${esc(copy)}')">${esc(val)}</div>`
       : `<div class="dv" title="click to copy" onclick="copyText('${esc(copy)}')">${esc(val)}</div>`}</div>`
     : '').join('');
+
+  const pre = el('snippetPre');
+  if (pre) pre.textContent = buildSnippet(app);
+  const useSnippet = el('snippetToggle') && el('snippetToggle').checked;
+  toggleSnippet(useSnippet);
 
   const tabs = el('codeTabs');
   const box = el('codeBlocks');
