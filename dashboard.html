@@ -66,6 +66,10 @@
           <span class="hero-chip" onclick="showPage('keys')"><span data-i18n="hero_sub_keys">KEYS</span> <b><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></b></span>
           <span class="hero-chip" onclick="showPage('users')"><span data-i18n="hero_sub_control">CONTROL</span> <b><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></b></span>
         </div>
+        <div class="hero-live" id="heroLive">
+          <span class="live-chip"><span class="lc-dot"></span><span data-i18n="hero_online">ONLINE</span> <b id="heroOnlineNum">0</b></span>
+          <span class="live-chip"><span data-i18n="hero_total_users">TOTAL USERS</span> <b id="heroTotalNum">0</b></span>
+        </div>
       </div>
 
       <div class="grid grid-3" id="statGrid"></div>
@@ -368,6 +372,19 @@ function toggleSecret(node, value) {
 }
 
 /* ============ Dashboard ============ */
+async function loadStats() {
+  const onl = el('heroOnlineNum'), tot = el('heroTotalNum');
+  if (!SERVER_ONLINE || !ME.apiKey) {
+    const valid = Licenses.all().filter(l => l.status === 'active').length;
+    onl.textContent = valid; tot.textContent = Licenses.all().length;
+    return;
+  }
+  const app = Apps.all()[0];
+  if (!app) return;
+  const j = await svc('api/stats?appid=' + encodeURIComponent(app.appId), { headers: { 'x-api-key': ME.apiKey } });
+  if (j && j.ok) { onl.textContent = j.online || 0; tot.textContent = j.total_users || 0; }
+}
+
 function renderDash() {
   const apps = Apps.all();
   const keys = Keys.all();
@@ -384,6 +401,8 @@ function renderDash() {
     <div class="card stat-card"><div class="label">${t('stat_apps')}</div><div class="big">${apps.length}</div><div class="trend">${t('stat_apps_trend')}</div></div>
     <div class="card stat-card"><div class="label">${t('stat_keys')}</div><div class="big">${keys.length}</div><div class="trend">${keys.filter(k => k.status === 'active').length} ${t('stat_keys_trend')}</div></div>
     <div class="card stat-card"><div class="label">${t('stat_users')}</div><div class="big">${licCount}</div><div class="trend">${t('stat_users_trend')}</div></div>`;
+
+  loadStats();
 
   el('secretRows').innerHTML = `
     <div class="detail-row"><div class="dk">${t('app_id')}</div><div class="dv" title="click to copy" onclick="copyText('${esc((Apps.all()[0]||{}).appId||'')}')">${esc((Apps.all()[0]||{}).appId||'')}</div></div>

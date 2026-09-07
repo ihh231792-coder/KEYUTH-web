@@ -624,6 +624,43 @@ body {
 }
 .hero-chip:hover { border-color: var(--accent); color: var(--text); box-shadow: 0 0 16px rgba(255,77,46,0.2); transform: translateY(-2px); }
 .hero-chip b { color: var(--accent-2); }
+.hero-live {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.live-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Orbitron', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  color: var(--text-dim);
+  background: var(--bg-2);
+}
+.live-chip b {
+  font-size: 14px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+.live-chip .lc-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+  animation: lcPulse 2s ease-in-out infinite;
+}
+@keyframes lcPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
 
 /* ============================================
    CARDS / GRID

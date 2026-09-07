@@ -60,7 +60,7 @@ COMMANDS
 ===============================================================
 
 /key      — Normal user: shortener link + 48h key
-            Owner: permanent / 48h / 7d / 30d / 365d options
+            Owner: permanent / 48h / 7d / 30d / 365d / Custom days options
 
 /mykey    — Apna current key aur expiry dikhata hai
 
@@ -89,8 +89,16 @@ OWNER KA FLOW
    - 7 days
    - 30 days
    - 365 days
+   - Custom days  ← koi bhi din daalo (1 se 3650 tak),
+                     jaise 1 din, 2 din, 3 din, 10 din, 90 din
 3. Owner button dabata hai → key generate ho jaata hai
 4. Key automatically DM ya reply me dikhta hai
+
+NOTE — OWNER ka naya “Custom days” option:
+“Custom days” pe click karo → ek box khulega → jitne din chahiye
+daalo (e.g. 2, 5, 90) → submit karo → exact utni der ki expiry
+wala key ban jaata hai. Isliye owner full freedom hai — permanent
+ya exact kitne bhi din ka.
 
 ===============================================================
 SHORTENER LINK KAHAN SE LAYEIN?

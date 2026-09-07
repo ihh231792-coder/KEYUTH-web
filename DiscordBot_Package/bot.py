@@ -124,6 +124,35 @@ class ShortenerView(ui.View):
             )
 
 
+class CustomDaysModal(ui.Modal, title="Custom key duration"):
+    days = ui.TextInput(label="Number of days", placeholder="e.g. 2, 5, 10, 90", max_length=5)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            n = int(self.days.value.strip())
+            if n <= 0 or n > 3650:
+                raise ValueError
+        except ValueError:
+            return await interaction.response.send_message(
+                "Enter a valid number of days (1 to 3650).", ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
+        username = f"dc_{interaction.user.id}"
+        from datetime import datetime, timezone, timedelta
+        until = int((datetime.now(timezone.utc) + timedelta(days=n)).timestamp() * 1000)
+        payload = {
+            "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
+            "username": username, "duration": "custom", "until": until,
+        }
+        async with aiohttp.ClientSession() as s:
+            async with s.post(f"{SERVER}/api/botkey", json=payload,
+                              timeout=aiohttp.ClientTimeout(total=20)) as r:
+                data = await r.json()
+        if not data.get("ok"):
+            return await interaction.followup.send("API error.", ephemeral=True)
+        await interaction.followup.send(
+            f"Key: `{data.get('license_key')}`\nExpires: {data.get('expires')}\nDays: {n}", ephemeral=True)
+
+
 class OwnerDurationView(ui.View):
     """Shown to the bot owner — choose key duration."""
     def __init__(self):
@@ -173,6 +202,10 @@ class OwnerDurationView(ui.View):
         if not data.get("ok"):
             return await interaction.followup.send("API error.", ephemeral=True)
         await interaction.followup.send(f"Key: `{data.get('license_key')}`\nExpires: {data.get('expires')}", ephemeral=True)
+
+    @ui.button(label="Custom days", style=discord.ButtonStyle.secondary, emoji="\U0001f4c8")
+    async def on_custom(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_modal(CustomDaysModal())
 
 
 # ── /key command ────────────────────────────────────────────────────────────

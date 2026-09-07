@@ -203,6 +203,28 @@ class Handler(SimpleHTTPRequestHandler):
             con.close()
             return self._send_json(ok(list=[row2dict(r) for r in rows]))
 
+        if p.path == "/api/stats":
+            api_key = self.headers.get("x-api-key")
+            qs = parse_qs(p.query)
+            appid = (qs.get("appid") or [""])[0]
+            if not api_key or not appid:
+                return self._send_json(fail("missing key or appid", 401))
+            con = db()
+            owner = con.execute("SELECT 1 FROM owners WHERE api_key=? AND appid=?",
+                                (api_key, appid)).fetchone()
+            if not owner:
+                con.close()
+                return self._send_json(fail("invalid key/appid", 401))
+            total = con.execute("SELECT COUNT(*) AS c FROM licenses WHERE appid=?",
+                                (appid,)).fetchone()["c"]
+            window = int(qs.get("window") or ["900000"])[0]  # ms; default 15 min
+            now = int(datetime.datetime.now().timestamp() * 1000)
+            online = con.execute(
+                "SELECT COUNT(*) AS c FROM licenses WHERE appid=? AND last_login IS NOT NULL"
+                " AND last_login >= ?", (appid, now - window)).fetchone()["c"]
+            con.close()
+            return self._send_json(ok(total_users=total, online=online))
+
         # static files
         return super().do_GET()
 
