@@ -385,6 +385,10 @@ async function loadStats() {
   if (j && j.ok) { onl.textContent = j.online || 0; tot.textContent = j.total_users || 0; }
 }
 
+setInterval(() => {
+  if (SERVER_ONLINE && ME.apiKey && document.visibilityState === 'visible') loadStats();
+}, 60000);
+
 function renderDash() {
   const apps = Apps.all();
   const keys = Keys.all();

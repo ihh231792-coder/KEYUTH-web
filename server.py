@@ -38,6 +38,9 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(ROOT, "ishu_auth.db")
 PORT = int(os.environ.get("PORT", "3000"))
 
+# in-memory presence: {appid: {username_or_panel: last_seen_ms}}
+PRESENCE = {}
+
 DUR_MS = {
     "permanent": 0,
     "1h": 3600 * 1000,
@@ -219,10 +222,19 @@ class Handler(SimpleHTTPRequestHandler):
                                 (appid,)).fetchone()["c"]
             window = int((qs.get("window") or ["900000"])[0])  # ms; default 15 min
             now = int(datetime.datetime.now().timestamp() * 1000)
-            online = con.execute(
-                "SELECT COUNT(*) AS c FROM licenses WHERE appid=? AND last_login IS NOT NULL"
-                " AND last_login >= ?", (appid, now - window)).fetchone()["c"]
+            # panel (dashboard open) = present
+            PRESENCE.setdefault(appid, {})["__panel__"] = now
+            # prune stale presence
+            for who in [k for k, ts in PRESENCE.get(appid, {}).items() if now - ts > window]:
+                del PRESENCE[appid][who]
+            seen = len([1 for who, ts in PRESENCE.get(appid, {}).items() if now - ts <= window])
+            online_rows = con.execute(
+                "SELECT username FROM licenses WHERE appid=? AND last_login IS NOT NULL"
+                " AND last_login >= ?", (appid, now - window)).fetchall()
             con.close()
+            for row in online_rows:
+                PRESENCE.setdefault(appid, {})[row["username"]] = now
+            online = len({who for who, ts in PRESENCE.get(appid, {}).items() if now - ts <= window})
             return self._send_json(ok(total_users=total, online=online))
 
         # static files
@@ -412,10 +424,11 @@ class Handler(SimpleHTTPRequestHandler):
                 con.close()
                 return fail("user is banned")
             new_key = gen_key("LIC")
+            hwlocked = 1 if _flag(body.get("lock"), True) else 0
             con.execute(
                 "UPDATE licenses SET license_key=?, duration=?, expires_at=?, hwid=NULL,"
-                " hwid_locked=0, last_login=NULL, created_at=? WHERE id=?",
-                (new_key, "until-date" if until else duration, expires, now, existing["id"]))
+                " hwid_locked=?, last_login=NULL, created_at=? WHERE id=?",
+                (new_key, "until-date" if until else duration, expires, hwlocked, now, existing["id"]))
             con.commit(); con.close()
             return ok(id=existing["id"], license_key=new_key, username=username,
                       expires=str(datetime.datetime.fromtimestamp(expires / 1000)) if expires else "permanent",
@@ -429,7 +442,7 @@ class Handler(SimpleHTTPRequestHandler):
             "type": ltype,
             "license_key": gen_key("LIC"),
             "hwid": None,
-            "hwid_locked": 0,
+            "hwid_locked": 1 if _flag(body.get("lock"), True) else 0,
             "duration": "until-date" if until else duration,
             "expires_at": expires,
             "created_at": now,
@@ -526,6 +539,7 @@ class Handler(SimpleHTTPRequestHandler):
         now = int(datetime.datetime.now().timestamp() * 1000)
         con.execute("UPDATE licenses SET last_login=?, hwid=? WHERE id=?", (now, new_hwid, row["id"]))
         con.commit()
+        PRESENCE.setdefault(appid, {})[row["username"]] = now
         expires = row["expires_at"]
         con.close()
         return ok(success=True, message="valid",

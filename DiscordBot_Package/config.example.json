@@ -6,7 +6,8 @@
   "ownerid": "IHH231792GMAILCOM-OFPDR",
   "secret": "SEC_fV0a-6poU-U6sp-xmAN-Wimi-j3ZF-D2HE-d5Hh",
   "version": "1.0",
-  "shortener": "https://your-shortener-link.com",
+  "shortener": "https://your-long-destination-url.com",
+  "vplink_api": "",
   "key_hours": 48,
   "cooldown_hours": 48
 }

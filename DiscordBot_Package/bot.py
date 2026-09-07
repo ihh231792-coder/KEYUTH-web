@@ -22,7 +22,8 @@ NAME     = CFG.get("name", "")
 OWNERID  = CFG.get("ownerid", "")
 SECRET   = CFG.get("secret", "")
 VERSION  = CFG.get("version", "1.0")
-SHORTENER = CFG.get("shortener", "")
+SHORTENER = CFG.get("shortener", "")      # destination long URL
+VPLINK_API = CFG.get("vplink_api", "")    # VPLINK API token (optional but recommended)
 BOT_OWNER = int(CFG.get("owner_id", 0))   # Discord user id of the admin
 KEY_HOURS = int(CFG.get("key_hours", 48))
 COOLDOWN_HOURS = int(CFG.get("cooldown_hours", 48))
@@ -47,11 +48,35 @@ DATA = _load_data()
 async def _botkey(username: str, duration: str = "48h"):
     payload = {
         "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
-        "username": username, "duration": duration,
+        "username": username, "duration": duration, "lock": True,
     }
     async with aiohttp.ClientSession() as s:
         async with s.post(f"{SERVER}/api/botkey", json=payload, timeout=aiohttp.ClientTimeout(total=20)) as r:
             return await r.json()
+
+
+async def _shorten() -> str | None:
+    """Generate a short link via VPLINK API. Returns the short URL, or the raw
+    destination link if VPLINK is not configured or fails."""
+    if not VPLINK_API or not SHORTENER:
+        return SHORTENER or None
+    params = {
+        "api": VPLINK_API,
+        "url": SHORTENER,
+        "format": "text",
+    }
+    async with aiohttp.ClientSession() as s:
+        try:
+            async with s.get(
+                "https://vplink.in/api", params=params,
+                timeout=aiohttp.ClientTimeout(total=20)) as r:
+                if r.status == 200:
+                    text = (await r.text()).strip()
+                    if text.startswith("https://vplink.in/"):
+                        return text
+        except Exception:
+            pass
+    return SHORTENER or None
 
 
 # ── Cooldown check ──────────────────────────────────────────────────────────
@@ -141,7 +166,7 @@ class CustomDaysModal(ui.Modal, title="Custom key duration"):
         until = int((datetime.now(timezone.utc) + timedelta(days=n)).timestamp() * 1000)
         payload = {
             "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
-            "username": username, "duration": "custom", "until": until,
+            "username": username, "duration": "custom", "until": until, "lock": True,
         }
         async with aiohttp.ClientSession() as s:
             async with s.post(f"{SERVER}/api/botkey", json=payload,
@@ -225,11 +250,12 @@ async def key_cmd(interaction: discord.Interaction):
             ephemeral=True,
         )
 
-    if not SHORTENER:
-        return await interaction.response.send_message("Shortener link is not configured. Contact admin.", ephemeral=True)
-
-    await interaction.response.send_message(
-        f"Complete the shortener below to receive a **{KEY_HOURS}h** key:\n{SHORTENER}",
+    await interaction.response.defer(ephemeral=True)
+    link = await _shorten()
+    if not link:
+        return await interaction.followup.send("Shortener link is not configured. Contact admin.", ephemeral=True)
+    await interaction.followup.send(
+        f"Complete the shortener below to receive a **{KEY_HOURS}h** key:\n{link}",
         view=ShortenerView(interaction.user.id),
         ephemeral=True,
     )

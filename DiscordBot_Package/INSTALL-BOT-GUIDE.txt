@@ -40,8 +40,12 @@ STEP 3 — Config file edit karo
      ownerid      → apka ISHU AUTH Owner ID
      secret       → apka ISHU AUTH Secret
      version      → apka version (e.g. "1.0")
-     shortener    → apka shortener link (VPN / gplinks / etc.)
-                    ye wo link hai jo user ko complete karna hai
+     shortener    → wo LONG destination URL jo user ko khulna
+                    hai (aapka VPN / site / video link)
+     vplink_api   → (optional) VPLINK API token. Agar bharte ho
+                    to bot har /key par SHORTENER ka auto chhota
+                    link (vplink.in) bana deta hai.
+                    VPLINK token yahan se: https://vplink.in
      key_hours    → key kitne ghante chalega (default 48)
      cooldown_hours → user kitne ghante baad naya key le sakta
                       hai (default 48)
@@ -74,7 +78,8 @@ NORMAL USER KA FLOW
 2. Bot usko shortener link deta hai (ephemeral msg)
 3. User shortener complete karta hai (captcha / vpn link)
 4. "I completed the link" button dabaata hai
-5. Bot 48h ka key generate karke DM karta hai
+5. Bot 48h ka key (HWID-locked — ek PC pe hi chalta hai)
+   generate karke DM karta hai
 6. 48h tak user dubara key nahi le sakta (/status se check)
 7. 48h ke baad dubara /key se process repeat
 
@@ -101,6 +106,31 @@ wala key ban jaata hai. Isliye owner full freedom hai — permanent
 ya exact kitne bhi din ka.
 
 ===============================================================
+VPLINK AUTO-SHORTENER (OPTIONAL)
+===============================================================
+
+Agar aapke paas VPLINK API token hai:
+1. https://vplink.in pe account banao → API section me token
+   copy karo
+2. config.json me:
+   - "shortener"  → wo ASLI LONG URL jo khulna hai
+   - "vplink_api" → aapka VPLINK token
+3. Ab jab koi /key karega, bot khud VPLINK se ek fresh chhota
+   link (vplink.in/xxx) bana kar dikhata hai — user usse
+   kholta hai, phir button dabata hai.
+
+Agar vplink_api khali hai, bot badle me aapka direct
+"shortener" URL hi dikhata hai (puraane jaisa).
+
+BOT TOKEN AUR OWNER ID KAHAN?
+- Discord bot token: https://discord.com/developers/applications
+  → apna app → "Bot" → "Reset Token" → Copy
+- Discord User ID: Discord me apne naam pe RIGHT CLICK → "Copy
+  User ID". (Pehle Settings → Advanced → "Developer Mode" ON)
+- Ye dono bas config.json ke "token" aur "owner_id" me jaate
+  hain. Aur kuch nahi karna.
+
+===============================================================
 SHORTENER LINK KAHAN SE LAYEIN?
 ===============================================================
 
@@ -113,7 +143,8 @@ Ye aapka choice hai. Koi bhi URL shortener use kar sakte ho:
 - Apna koi custom captcha page
 
 Bot me "shortener" field me sirf URL dalo — jab user /key
-karega, usko ye link dikhega aur button milega.
+karega, usko ye link dikhega aur button milega. VPLINK token
+ho to auto-shorten hoga (upar dekho).
 
 ===============================================================
 IMPORTANT NOTES
