@@ -460,8 +460,9 @@ function refreshAppHWID(id) {
   renderApps();
 }
 
-function deleteApp(id) {
-  if (!confirm(t('confirm_del_app'))) return;
+async function deleteApp(id) {
+  const ok = await confirmFx(t('confirm_del_app'), { title: t('delete'), confirmKey: 'delete' });
+  if (!ok) return;
   Apps.remove(id);
   (Licenses.all(id) || []).forEach(l => Licenses.remove(l.id));
   Apps.ensureDefault();
@@ -595,12 +596,14 @@ function rotateKey(id) {
   const k = Keys.rotate(id);
   if (k) { toast(t('key_rotated'), 'ok'); renderKeys(); renderDash(); }
 }
-function revokeKeyF(id) {
-  if (!confirm(t('confirm_revoke'))) return;
+async function revokeKeyF(id) {
+  const ok = await confirmFx(t('confirm_revoke'), { title: t('revoke'), confirmKey: 'revoke' });
+  if (!ok) return;
   Keys.revoke(id); toast(t('key_revoked'), 'ok'); renderKeys(); renderDash();
 }
-function deleteKey(id) {
-  if (!confirm(t('confirm_del_key'))) return;
+async function deleteKey(id) {
+  const ok = await confirmFx(t('confirm_del_key'), { title: t('delete'), confirmKey: 'delete' });
+  if (!ok) return;
   Keys.remove(id); toast(t('key_deleted'), 'ok'); renderKeys(); renderDash();
 }
 
@@ -807,9 +810,10 @@ function toggleBanF(id, banned) {
   if (l) { toast(banned ? t('banned') : t('unbanned'), 'ok'); renderUsers(); }
 }
 
-function deleteUserF(id) {
-  if (!confirm(t('delete'))) return;
+async function deleteUserF(id) {
   const appId = el('uAppSel').value;
+  const ok = await confirmFx(t('delete'), { title: t('delete'), confirmKey: 'delete' });
+  if (!ok) return;
   if (SERVER_ONLINE && appId) {
     const app = Apps.get(appId);
     svc('api/license/' + id, jsonOpts('DELETE', { key: ME.apiKey, appid: app.appId, id })).then(j => {
@@ -1001,6 +1005,31 @@ function renderInstall() {
 function closeModal() { el('modalRoot').classList.remove('show'); }
 el('modalRoot').addEventListener('click', e => { if (e.target === el('modalRoot')) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* Animated confirm — returns a Promise; resolves true/false */
+function confirmFx(message, opts) {
+  opts = opts || {};
+  const confirmKey = opts.confirmKey || 'delete';
+  return new Promise(resolve => {
+    el('modalRoot').classList.add('show');
+    el('modalBox').innerHTML = `
+      <div class="fx-confirm">
+        <div class="fx-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h2>${opts.title || t('delete')}</h2>
+        <p class="fx-msg">${message}</p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" autofocus onclick="resolveFx(false)">${t('cancel')}</button>
+          <button class="btn fx-danger" onclick="resolveFx(true)">${t(confirmKey)}</button>
+        </div>
+      </div>`;
+    window.resolveFx = function (val) {
+      closeModal();
+      resolve(val);
+    };
+  });
+}
 
 /* ============ Settings page ============ */
 const SWATCH_COLORS = [

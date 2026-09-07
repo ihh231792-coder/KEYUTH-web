@@ -1052,6 +1052,37 @@ table.ix .act .btn-sm { padding: 6px 10px; font-size: 11px; flex: none; }
 .modal-actions .btn { flex: 1; }
 .m-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* ---- animated confirm ---- */
+.fx-confirm { text-align: center; }
+.fx-confirm .fx-icon {
+  width: 74px; height: 74px;
+  margin: 4px auto 18px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--red, #ef4444);
+  background: rgba(239, 68, 68, 0.12);
+  border: 2px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 0 26px rgba(239, 68, 68, 0.25);
+  animation: fxShake 0.6s ease;
+}
+.fx-confirm .fx-icon svg { width: 32px; height: 32px; }
+.fx-confirm h2 { margin-bottom: 6px; }
+.fx-confirm .fx-msg { color: var(--text-dim); font-size: 14px; line-height: 1.6; margin-bottom: 22px; }
+.btn.fx-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+.btn.fx-danger:hover { filter: brightness(1.12); box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5); }
+.btn.fx-danger:active { transform: scale(0.96); }
+@keyframes fxShake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-14deg) scale(1.08); }
+  40% { transform: rotate(12deg) scale(1.08); }
+  60% { transform: rotate(-8deg) scale(1.04); }
+  80% { transform: rotate(6deg); }
+}
+
 .input-group { margin-bottom: 16px; }
 .input-group label {
   display: block; font-size: 11px; color: var(--text-dim);
