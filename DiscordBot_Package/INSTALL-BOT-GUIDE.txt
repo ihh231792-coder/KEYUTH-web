@@ -121,9 +121,11 @@ NORMAL USER KA FLOW (VERIFIED — NO FAKE COMPLETION)
 2. Bot puchta hai: "What do you want?"
    - License Key        (key only)
    - Username + Password (login wala)
-3. User ek choose karta hai → bot VPLINK ka chhota link deta hai
-4. User wo link kholta hai → AD ho rahi hai → CAPTCHA hota hai →
-   WAIT karta hai → 100% complete karta hai
+3. User ek choose karta hai → bot bada **"Open Link"** button +
+   VP link deta hai
+4. User "Open Link" pe click karta hai → DEFAULT BROWSER me VP
+   link khulta hai → AD/captcha complete hoti hai → WAIT karta
+   hai → 100% complete karta hai
 5. Link complete hote hi user ka browser SERVER ke callback pe
    redirect hota hai → SERVER completion RECORD karta hai
 6. BOT automatically (har 5 sec) server se check karta hai ki
@@ -138,6 +140,11 @@ nahi ho sakta. Jo log bina link khola "completed" dabate the,
 ab unko KYA milta hai? — key bilkul nahi, kyunki bot server se
 check karta hai ki uska browser sach me VPLINK redirect se aaya
 hai ya nahi. Jab tak URL khud load nahi hota, key nahi milegi.
+
+AUR: agar vplink_api me GALAT token ho (ya koi aur cheez, jaise
+crypto address), bot key dena BAND kar dega — "VPLINK link nahi
+ban paya" error. Isliye vplink_api me SIRF sahi VPLINK token
+rakho. Sirf wahi ad-earning wala flow chalega.
 
 ===============================================================
 OWNER KA FLOW

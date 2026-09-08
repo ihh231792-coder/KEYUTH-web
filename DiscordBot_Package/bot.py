@@ -212,15 +212,26 @@ class UserKeyTypeView(ui.View):
         if not link:
             return await interaction.followup.send(
                 "Shortener link is not configured. Contact admin.", ephemeral=True)
+        if VPLINK_API and "vplink.in/" not in link:
+            return await interaction.followup.send(
+                "\u26a0\ufe0f VPLINK link nahi ban paya \u2014 config me `vplink_api` sahi token check karo.\n"
+                "Jab tak VP link nahi khulta, key dena band hai.", ephemeral=True)
+
+        view = ui.View()
+        view.add_item(ui.Button(
+            label="\U0001f517 Open Link \u2014 Complete the task",
+            style=discord.ButtonStyle.link, url=link))
 
         text = (
-            f"Tap the link and **complete it fully**:\n{link}\n\n"
-            f"\u23f3 Waiting for your **real completion** \u2014 your "
-            f"**{self._pick(ltype)}** will be sent to your DM automatically "
-            f"once it is verified. No button \u2014 no shortcut.\n\n"
+            f"Tap **Open Link** \u2014 wo aapke browser me khulega.\n"
+            f"100% complete karo (ad \u2192 page khule) fir **intazar karo** \u2014\n\n"
+            f"\u23f3 Verifying your completion \u2026 aapka "
+            f"**{self._pick(ltype)}** DM me **automatically** jayega.\n"
+            f"*Bina link khole koi key nahi mil sakti \u2014 server verify karta hai.*\n\n"
+            f"Direct link: {link}\n\n"
             f"Key lasts **{KEY_HOURS}h**."
         )
-        msg = await interaction.followup.send(text, ephemeral=True, wait=True)
+        msg = await interaction.followup.send(text, view=view, ephemeral=True, wait=True)
         if getattr(msg, "id", None):
             PENDING[token] = {
                 "channel_id": interaction.channel_id,
