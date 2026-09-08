@@ -169,6 +169,21 @@ def _fmt_issue(data: dict) -> str:
     return f"**License Key**\n`{data.get('license_key', '')}`"
 
 
+def _dm_text(data: dict, expires: str) -> str:
+    """Professional DM layout for the issued credentials."""
+    if data.get("type") == "user":
+        creds = (f"**\U0001f464 Username**\n`{data.get('username', '')}`\n\n"
+                 f"**\U0001f511 Password**\n`{data.get('password', '')}`")
+    else:
+        creds = f"**\U0001f511 License Key**\n`{data.get('license_key', '')}`"
+    return (
+        "\U0001f389 **Congratulations! Your key is ready.**\n\n"
+        f"**Your Access Credentials:**\n{creds}\n\n"
+        f"\u23f1\ufe0f **Expires:** {expires or 'Permanent'}"
+        "\n\n\U0001f4dd *Please keep your credentials safe and do not share them with anyone.*"
+    )
+
+
 # ── Bot setup ───────────────────────────────────────────────────────────────
 intents = discord.Intents.default()
 intents.members = True
@@ -225,13 +240,15 @@ class TaskClaimView(ui.View):
         if not st.get("completed"):
             # Server says the session is still pending -> bypass blocked.
             return await interaction.followup.send(
-                "\u274c **You have not completed the link yet! Bypass detected.**\n\n"
-                "Open the link, let the 8-second countdown finish, then press "
+                "\u274c **Verification Incomplete \u2014 Access Denied**\n\n"
+                "Your task has not been verified yet. Please open the link and "
+                "wait for the **8-second countdown** to finish, then press "
                 "**\u2705 I completed the link** again.", ephemeral=True)
 
         await _deliver_key(task, self.token)
         await interaction.followup.send(
-            "\u2705 Verified \u2014 your key was sent to your DM!", ephemeral=True)
+            "\u2705 **Verification Successful** \u2014 your key has been sent to your DM!",
+            ephemeral=True)
 
 
 class UserKeyTypeView(ui.View):
@@ -265,17 +282,23 @@ class UserKeyTypeView(ui.View):
                 "Shortener link is not configured. Contact admin.", ephemeral=True)
         if VPLINK_API and "vplink.in/" not in link:
             return await interaction.followup.send(
-                "\u26a0\ufe0f VPLINK link nahi ban paya \u2014 config me `vplink_api` sahi token check karo.\n"
-                "Jab tak VP link nahi khulta, key dena band hai.", ephemeral=True)
+                "\u26a0\ufe0f **Verification link could not be generated.**\n"
+                "Please contact the support team and inform them the shortener "
+                "service is misconfigured (`vplink_api`).", ephemeral=True)
 
         text = (
-            f"Tap **Open Link** \u2014 wo aapke browser me khulega.\n\n"
-            f"\u26a0\ufe0f **8 sec countdown** ke baad hi key milegi \u2014 tab tak "
-            f"**browser band / back mat karo.**\n\n"
-            f"Verify ho jaane ke baad **\u2705 I completed the link** button "
-            f"dabaao \u2014 tab hi key milegi.\n"
-            f"*Bina countdown complete kiye button dabane par key NAHI milegi*\n\n"
-            f"Key lasts **{KEY_HOURS}h**."
+            f"**\U0001f510 Task Verification Required**\n\n"
+            f"Before your **{self._pick(ltype)}** is issued, please complete a "
+            f"quick verification step in your browser.\n\n"
+            f"**1.** Tap **\U0001f517 Open Link** \u2014 it will open in your default browser.\n"
+            f"**2.** Let the **8-second countdown** finish. \u26a0\ufe0f Do **not** close "
+            f"the tab or press the back button.\n"
+            f"**3.** When the page confirms your task is verified, tap "
+            f"**\u2705 I completed the link** below.\n\n"
+            f"Your key will be delivered to your Direct Messages immediately after "
+            f"the server verifies your completion.\n\n"
+            f"\u23f1\ufe0f Request expires in **{TASK_TIMEOUT_SECONDS // 60} minutes**.\n"
+            f"Key duration: **{KEY_HOURS} hours**."
         )
         msg = await interaction.followup.send(
             text, view=TaskClaimView(token, self.user_id, ltype, link),
@@ -335,7 +358,7 @@ async def _deliver_key(task: dict, token: str):
     DATA["last_keys"][str(user_id)] = {"body": body, "expires": expires}
     _save_data(DATA)
 
-    dm_text = f"\U0001f511 **Your key is ready!**\n{body}\nExpires: {expires}"
+    dm_text = _dm_text(data, expires)
     sent = False
     try:
         target = bot.get_user(user_id) or await bot.fetch_user(user_id)
@@ -348,9 +371,11 @@ async def _deliver_key(task: dict, token: str):
 
     what = "Username + Password" if ltype == "user" else "License Key"
     if sent:
-        await _edit_task(task, f"\u2705 **Verified \u2014 {what} sent to your DM!**")
+        await _edit_task(task, f"\u2705 **Verified \u2014 {what} delivered to your DM!**")
     else:
-        await _edit_task(task, f"{body}\nExpires: {expires}\n\n*Couldn't DM you \u2014 please enable DMs.*")
+        await _edit_task(task, f"\u2705 **Verified \u2014 here are your credentials**\n\n"
+                               f"{body}\nExpires: {expires}\n\n"
+                               f"*Couldn't DM you \u2014 please enable DMs and try `/mykey`.*")
     PENDING.pop(token, None)
 
 
@@ -374,12 +399,13 @@ async def _watch_status(token: str):
         if res.get("ok") and res.get("completed"):
             await _edit_task(
                 task,
-                "\u2705 **Task completed & verified!**\n\n"
-                "Press **\u2705 I completed the link** below to claim your key in DM.",
+                "\u2705 **Task Completed & Verified**\n\n"
+                "Press **\u2705 I completed the link** below to receive your key "
+                "via Direct Message.",
                 keep_view=True)
             return
     if token in PENDING:
-        await _edit_task(task, "\u23f0 **Timeout** \u2014 task was not completed. Run `/key` to try again.")
+        await _edit_task(task, "\u23f0 **Request Expired** \u2014 the verification was not completed in time. Please run `/key` to start again.")
         PENDING.pop(token, None)
 
 
@@ -482,12 +508,13 @@ async def key_cmd(interaction: discord.Interaction):
     allowed, remaining = _user_cooldown_ok(interaction.user.id)
     if not allowed:
         return await interaction.response.send_message(
-            f"Your previous key is still active. Please wait **{_format_time(remaining)}** before generating a new one.",
+            f"\u23f1\ufe0f Your previous key is still active. Please wait **{_format_time(remaining)}** before generating a new one.",
             ephemeral=True,
         )
 
     await interaction.response.send_message(
-        "What do you want?", view=UserKeyTypeView(interaction.user.id), ephemeral=True,
+        "Please select the type of key you would like to generate:",
+        view=UserKeyTypeView(interaction.user.id), ephemeral=True,
     )
 
 
@@ -496,9 +523,10 @@ async def key_cmd(interaction: discord.Interaction):
 async def mykey_cmd(interaction: discord.Interaction):
     info = DATA["last_keys"].get(str(interaction.user.id))
     if not info:
-        return await interaction.response.send_message("You don't have a key yet. Use `/key` to get one.", ephemeral=True)
+        return await interaction.response.send_message(
+            "You don't have a key yet. Use `/key` to generate one.", ephemeral=True)
     await interaction.response.send_message(
-        f"**Your key**\n{info['body']}\nExpires: {info['expires']}", ephemeral=True
+        f"**Your Active Key**\n{info['body']}\nExpires: {info['expires']}", ephemeral=True
     )
 
 
@@ -507,9 +535,11 @@ async def mykey_cmd(interaction: discord.Interaction):
 async def status_cmd(interaction: discord.Interaction):
     allowed, remaining = _user_cooldown_ok(interaction.user.id)
     if allowed:
-        return await interaction.response.send_message("You can generate a key now! Use `/key`.", ephemeral=True)
+        return await interaction.response.send_message(
+            "You can generate a new key now. Use `/key`.", ephemeral=True)
     await interaction.response.send_message(
-        f"Please wait **{_format_time(remaining)}** before generating a new key.", ephemeral=True
+        f"\u23f1\ufe0f Please wait **{_format_time(remaining)}** before generating a new key.",
+        ephemeral=True
     )
 
 
