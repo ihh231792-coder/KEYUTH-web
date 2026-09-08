@@ -177,10 +177,61 @@ tree = app_commands.CommandTree(bot)
 
 
 # ── Views ───────────────────────────────────────────────────────────────────
-# Pending verified tasks: token -> {channel_id, msg_id, user_id, ltype}
+# Pending verified tasks: token -> {channel_id, msg_id, user_id, ltype, link}
 PENDING = {}
 TASK_TIMEOUT_SECONDS = 300   # how long the bot waits for a real completion
 TASK_POLL_SECONDS = 5
+
+
+class TaskClaimView(ui.View):
+    """Shown while a task is pending: open-link button + server-verified
+    'I completed' claim button. The claim button NEVER trusts the client — it
+    asks the backend for the session status first (pending -> reject, completed
+    -> issue key)."""
+    def __init__(self, token: str, user_id: int, ltype: str, link: str):
+        super().__init__(timeout=300)
+        self.token = token
+        self.user_id = user_id
+        self.ltype = ltype
+        self.add_item(ui.Button(
+            label="\U0001f517 Open Link \u2014 Complete the task",
+            style=discord.ButtonStyle.link, url=link))
+
+    def _pick(self, ltype: str) -> str:
+        return "Username + Password" if ltype == "user" else "License Key"
+
+    @ui.button(label="\u2705 I completed the link \u2014 Claim my key",
+               style=discord.ButtonStyle.success, emoji="\u2705")
+    async def on_claim(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != self.user_id:
+            return await interaction.response.send_message(
+                "This button is not for you.", ephemeral=True)
+        task = PENDING.get(self.token)
+        if not task:
+            return await interaction.response.send_message(
+                "This task has expired. Run `/key` again.", ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            st = await _task_status(self.token)
+        except Exception:
+            return await interaction.followup.send(
+                "Server error. Try again in a moment.", ephemeral=True)
+
+        if not st.get("ok"):
+            return await interaction.followup.send(
+                "Task not found. Run `/key` again.", ephemeral=True)
+
+        if not st.get("completed"):
+            # Server says the session is still pending -> bypass blocked.
+            return await interaction.followup.send(
+                "\u274c **You have not completed the link yet! Bypass detected.**\n\n"
+                "Open the link, let the 8-second countdown finish, then press "
+                "**\u2705 I completed the link** again.", ephemeral=True)
+
+        await _deliver_key(task, self.token)
+        await interaction.followup.send(
+            "\u2705 Verified \u2014 your key was sent to your DM!", ephemeral=True)
 
 
 class UserKeyTypeView(ui.View):
@@ -217,30 +268,27 @@ class UserKeyTypeView(ui.View):
                 "\u26a0\ufe0f VPLINK link nahi ban paya \u2014 config me `vplink_api` sahi token check karo.\n"
                 "Jab tak VP link nahi khulta, key dena band hai.", ephemeral=True)
 
-        view = ui.View()
-        view.add_item(ui.Button(
-            label="\U0001f517 Open Link \u2014 Complete the task",
-            style=discord.ButtonStyle.link, url=link))
-
         text = (
             f"Tap **Open Link** \u2014 wo aapke browser me khulega.\n\n"
             f"\u26a0\ufe0f **8 sec countdown** ke baad hi key milegi \u2014 tab tak "
             f"**browser band / back mat karo.**\n\n"
-            f"\u23f3 Verify ho raha hai \u2026 aapka "
-            f"**{self._pick(ltype)}** DM me **automatically** jayega.\n"
-            f"*Bina countdown complete kiye koi key nahi mil sakti.*\n\n"
-            f"Direct link: {link}\n\n"
+            f"Verify ho jaane ke baad **\u2705 I completed the link** button "
+            f"dabaao \u2014 tab hi key milegi.\n"
+            f"*Bina countdown complete kiye button dabane par key NAHI milegi*\n\n"
             f"Key lasts **{KEY_HOURS}h**."
         )
-        msg = await interaction.followup.send(text, view=view, ephemeral=True, wait=True)
+        msg = await interaction.followup.send(
+            text, view=TaskClaimView(token, self.user_id, ltype, link),
+            ephemeral=True, wait=True)
         if getattr(msg, "id", None):
             PENDING[token] = {
                 "channel_id": interaction.channel_id,
                 "msg_id": msg.id,
                 "user_id": self.user_id,
                 "ltype": ltype,
+                "link": link,
             }
-            bot.loop.create_task(_await_and_issue(token))
+            bot.loop.create_task(_watch_status(token))
         else:
             await interaction.followup.send(
                 "Task started, but I couldn't track it. Contact admin.", ephemeral=True)
@@ -254,19 +302,24 @@ class UserKeyTypeView(ui.View):
         await self._start(interaction, "user")
 
 
-async def _edit_task(task: dict, text: str):
+async def _edit_task(task: dict, text: str, keep_view: bool = False):
     channel = bot.get_channel(task["channel_id"])
     if not channel:
         return
     try:
         msg = channel.get_partial_message(task["msg_id"])
-        await msg.edit(content=text, view=None)
+        if keep_view:
+            await msg.edit(content=text)
+        else:
+            await msg.edit(content=text, view=None)
     except Exception:
         pass
 
 
 async def _deliver_key(task: dict, token: str):
-    """After server confirms a real completion: issue + auto-DM the chosen key."""
+    """Called ONLY from the server-verified 'I completed' button: the backend
+    already returned completed=True for this session token, so we issue the key
+    + DM it. No client-side fake completion can reach this path."""
     user_id = task["user_id"]
     ltype = task["ltype"]
     data = await _botkey(f"dc_{user_id}", duration=f"{KEY_HOURS}h", ltype=ltype,
@@ -301,23 +354,30 @@ async def _deliver_key(task: dict, token: str):
     PENDING.pop(token, None)
 
 
-async def _await_and_issue(token: str):
-    """Poll the server until a REAL completion fires (callback hit), then
-    auto-DM the key. No user-clickable 'I completed' button exists, so fake
-    clicks can't mint keys."""
+async def _watch_status(token: str):
+    """Poll the server. When the backend marks the session completed (via the
+    signed verify-page postback), update the Discord message so the user knows
+    to press the 'I completed' claim button. The key itself is issued ONLY when
+    the user presses the button AND the backend confirms completion."""
     task = PENDING.get(token)
     if not task:
         return
     deadline = time.time() + TASK_TIMEOUT_SECONDS
     while time.time() < deadline:
+        if token not in PENDING:
+            return
         await asyncio.sleep(TASK_POLL_SECONDS)
         try:
             res = await _task_status(token)
-            if res.get("ok") and res.get("completed"):
-                await _deliver_key(task, token)
-                return
         except Exception:
-            pass
+            continue
+        if res.get("ok") and res.get("completed"):
+            await _edit_task(
+                task,
+                "\u2705 **Task completed & verified!**\n\n"
+                "Press **\u2705 I completed the link** below to claim your key in DM.",
+                keep_view=True)
+            return
     if token in PENDING:
         await _edit_task(task, "\u23f0 **Timeout** \u2014 task was not completed. Run `/key` to try again.")
         PENDING.pop(token, None)

@@ -89,7 +89,7 @@ def _verify_html(token, sig, dest, state):
     if state == "bad":
         return "<html><body><h3>Invalid link.</h3></body></html>"
     if state == "done":
-        return "<html><body><h3>Already verified. Your key was sent to Discord DM.</h3></body></html>"
+        return "<html><body><h3>Task already verified successfully! You can now claim your key on Discord.</h3></body></html>"
     return """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <title>Verifying your completion…</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -107,7 +107,7 @@ def _verify_html(token, sig, dest, state):
   <div class="num" id="n">8</div>
   <div class="bar"><i id="b"></i></div>
   <div class="warn" id="w">Do not close / go back — your key is being prepared.</div></div>
- <div class="ok" id="ok">&#10004;&#65039; Verified! Your key is on its way to your Discord DM.</div>
+ <div class="ok" id="ok">&#10004;&#65039; Task verified successfully! You can now claim your key on Discord.</div>
 </div>
 <script>
 var T={token:"__T__",sig:"__S__",dest:"__D__",left:8};
