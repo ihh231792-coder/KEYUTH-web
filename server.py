@@ -27,6 +27,7 @@ Endpoints:
 import json
 import sqlite3
 import hashlib
+import hmac
 import uuid
 import os
 import re
@@ -70,6 +71,62 @@ def gen_key(prefix):
 
 def new_id():
     return uuid.uuid4().hex[:16]
+
+
+def _sign_token(token):
+    return hmac.new(SECRET_PEPPER.encode("utf-8"),
+                    ("vc:" + token).encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def html_esc(s):
+    return (str(s).replace("&", "&amp;").replace("<", "&lt;")
+            .replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#39;"))
+
+
+def _verify_html(token, sig, dest, state):
+    """Self-contained countdown page. Only after the full countdown does it POST
+    a signed confirm with the HMAC — so no code copy-paste can fake completion."""
+    if state == "bad":
+        return "<html><body><h3>Invalid link.</h3></body></html>"
+    if state == "done":
+        return "<html><body><h3>Already verified. Your key was sent to Discord DM.</h3></body></html>"
+    return """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>Verifying your completion…</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#0f1222;color:#fff;
+      display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
+ .box{max-width:420px;padding:32px;background:#1a1f3a;border-radius:16px;border:1px solid #2e3560}
+ .num{font-size:64px;font-weight:800;color:#4c8dff;margin:12px 0}
+ .bar{height:6px;background:#2e3560;border-radius:3px;overflow:hidden;margin:16px 0}
+ .bar i{display:block;height:100%;width:0;background:#4c8dff;transition:width 1s linear}
+ .ok{display:none;color:#34d399;font-size:18px;font-weight:700}
+ .warn{color:#fbbf24;margin-top:12px;font-size:13px}
+</style></head><body><div class="box">
+ <div id="wait"><div style="font-size:15px;color:#aab">Verifying your task… please wait</div>
+  <div class="num" id="n">8</div>
+  <div class="bar"><i id="b"></i></div>
+  <div class="warn" id="w">Do not close / go back — your key is being prepared.</div></div>
+ <div class="ok" id="ok">&#10004;&#65039; Verified! Your key is on its way to your Discord DM.</div>
+</div>
+<script>
+var T={token:"__T__",sig:"__S__",dest:"__D__",left:8};
+(function(){var n=document.getElementById('n'),b=document.getElementById('b'),
+ ok=document.getElementById('ok'),w=document.getElementById('wait');
+ b.style.width='12.5%';
+ var iv=setInterval(function(){T.left--;n.textContent=T.left;b.style.width=(12.5*(8-T.left+1))+'%';
+  if(T.left<=0){clearInterval(iv);w.textContent='Verifying…';
+   fetch('/api/shortlink/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({token:T.token,sig:T.sig})})
+    .then(function(r){return r.json()}).then(function(d){
+     if(d.ok){wait.style.display='none';ok.style.display='block';
+      if(T.dest){setTimeout(function(){location.href=T.dest},4000);}}
+     else{w.textContent='Failed: '+(d.message||'error');}})
+    .catch(function(){w.textContent='Network error — check connection.';});
+  }},1000);
+})();
+</script></body></html>""".replace("__T__", html_esc(token)).replace("__S__", html_esc(sig)) \
+    .replace("__D__", html_esc(dest))
 
 
 def db_init():
@@ -117,6 +174,9 @@ def db_init():
             ip TEXT
         )
     """)
+    tcols = [r[1] for r in con.execute("PRAGMA table_info(shortlink_tasks)")]
+    if "ip" not in tcols:
+        con.execute("ALTER TABLE shortlink_tasks ADD COLUMN ip TEXT")
     con.commit()
     con.close()
 
@@ -250,6 +310,35 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(html)
             return
 
+        if p.path == "/api/shortlink/v":
+            # Signed verification page: the user MUST stay on this page for the
+            # full countdown; only then the page issues a signed confirm request.
+            # Landing here alone does NOT complete the task (no key without
+            # the HMAC confirm) — so opening the link and backing out gains nothing.
+            qs = parse_qs(p.query)
+            token = (qs.get("token") or [""])[0]
+            tk, dest, state = "--invalid--", "", "bad"
+            if token:
+                con = db()
+                row = con.execute(
+                    "SELECT destination, completed FROM shortlink_tasks WHERE token=?",
+                    (token,)).fetchone()
+                con.close()
+                if row:
+                    tk = token
+                    dest = html_esc(row["destination"]) if row["destination"] else ""
+                    state = "done" if row["completed"] else "wait"
+            sig = _sign_token(tk)
+            html = _verify_html(tk, sig, dest, state)
+            data = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self._cors()
+            self.end_headers()
+            self.wfile.write(data)
+            return
+
         # static files
         return super().do_GET()
 
@@ -295,6 +384,9 @@ class Handler(SimpleHTTPRequestHandler):
 
         if p.path == "/api/shortlink/check":
             return self._send_json(self._shortlink_check(body))
+
+        if p.path == "/api/shortlink/confirm":
+            return self._send_json(self._shortlink_confirm(body))
 
         if p.path == "/api/license/resethwid":
             return self._send_json(self._mutate(body, action="hwid"))
@@ -404,6 +496,32 @@ class Handler(SimpleHTTPRequestHandler):
             return fail("task not found", 404)
         return ok(token=token, completed=bool(row["completed"]),
                   ltype=row["ltype"] or "license")
+
+    def _shortlink_confirm(self, body):
+        # Called ONLY by the signed verification page (with the HMAC sig).
+        # Without a valid sig no one can mark a task complete — so copying the
+        # link, backing out, or hitting the URL directly gives nothing.
+        token = (body.get("token") or "").strip()
+        sig = (body.get("sig") or "").strip()
+        if not token:
+            return fail("token required")
+        if not sig:
+            return fail("missing signature")
+        ok_sig = hmac.compare_digest(sig, _sign_token(token))
+        if not ok_sig:
+            return fail("invalid signature", 403)
+        con = db()
+        row = con.execute(
+            "SELECT completed FROM shortlink_tasks WHERE token=?", (token,)).fetchone()
+        if not row:
+            con.close()
+            return fail("task not found", 404)
+        addr = self.client_address[0] if self.client_address else ""
+        con.execute(
+            "UPDATE shortlink_tasks SET completed=1, completed_at=?, ip=? WHERE token=?",
+            (int(datetime.datetime.now().timestamp() * 1000), addr, token))
+        con.commit(); con.close()
+        return ok(token=token, completed=True)
 
     def _init(self, body):
         key, appid, err, code = self._resolve_auth(body)

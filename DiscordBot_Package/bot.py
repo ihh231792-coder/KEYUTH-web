@@ -207,7 +207,7 @@ class UserKeyTypeView(ui.View):
                 "Could not start the task. Try again later.", ephemeral=True)
 
         token = res["token"]
-        callback = f"{SERVER}/api/shortlink/c?token={token}"
+        callback = f"{SERVER}/api/shortlink/v?token={token}"
         link = await _shorten(callback)
         if not link:
             return await interaction.followup.send(
@@ -223,11 +223,12 @@ class UserKeyTypeView(ui.View):
             style=discord.ButtonStyle.link, url=link))
 
         text = (
-            f"Tap **Open Link** \u2014 wo aapke browser me khulega.\n"
-            f"100% complete karo (ad \u2192 page khule) fir **intazar karo** \u2014\n\n"
-            f"\u23f3 Verifying your completion \u2026 aapka "
+            f"Tap **Open Link** \u2014 wo aapke browser me khulega.\n\n"
+            f"\u26a0\ufe0f **8 sec countdown** ke baad hi key milegi \u2014 tab tak "
+            f"**browser band / back mat karo.**\n\n"
+            f"\u23f3 Verify ho raha hai \u2026 aapka "
             f"**{self._pick(ltype)}** DM me **automatically** jayega.\n"
-            f"*Bina link khole koi key nahi mil sakti \u2014 server verify karta hai.*\n\n"
+            f"*Bina countdown complete kiye koi key nahi mil sakti.*\n\n"
             f"Direct link: {link}\n\n"
             f"Key lasts **{KEY_HOURS}h**."
         )

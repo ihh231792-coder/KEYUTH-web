@@ -146,6 +146,22 @@ crypto address), bot key dena BAND kar dega — "VPLINK link nahi
 ban paya" error. Isliye vplink_api me SIRF sahi VPLINK token
 rakho. Sirf wahi ad-earning wala flow chalega.
 
+VERIFY PAGE (8-SEC COUNTDOWN) — ANTI-GLITCH
+===============================================================
+
+Jab user VP link ke baad server ke verify page pe pahunchta hai:
+1. Page pe 8-second forced countdown chalta hai — skip nahi ho
+   sakta, browser me hi rehna padta hai
+2. Countdown khatam hone pe page ek SIGNED confirm bhejta hai
+   (HMAC signature server se)
+3. Signature galat hai to server confirm REJECT karta hai —
+   code-copy / link-copy / direct hit se kuch nahi hota
+4. Confirm sirf valid hone pe completed=true → bot ko pata →
+   DM me key
+
+Isliye: user link khol ke turant back kare / page chhode →
+countdown nahi hua → confirm nahi → KEY NAHI.
+
 ===============================================================
 OWNER KA FLOW
 ===============================================================
