@@ -59,9 +59,14 @@ async def _botkey(username: str, duration: str = "48h", ltype: str = "license", 
     }
     if ltype == "user":
         payload["password"] = password or _passwd()
-    async with aiohttp.ClientSession() as s:
-        async with s.post(f"{SERVER}/api/botkey", json=payload, timeout=aiohttp.ClientTimeout(total=25)) as r:
-            return await r.json()
+    data = await _api_post(f"{SERVER}/api/botkey", payload)
+    if not data.get("ok"):
+        # Render wipes the SQLite DB (owner row) whenever its free instance
+        # restarts — reseed the owner row and retry once so "API error." can
+        # never persist. No manual bot restart needed.
+        await _bootstrap()
+        data = await _api_post(f"{SERVER}/api/botkey", payload)
+    return data
 
 
 async def _shorten(url: str) -> str | None:
@@ -78,7 +83,7 @@ async def _shorten(url: str) -> str | None:
         try:
             async with s.get(
                 "https://vplink.in/api", params=params,
-                timeout=aiohttp.ClientTimeout(total=20)) as r:
+                timeout=aiohttp.ClientTimeout(total=30)) as r:
                 if r.status == 200:
                     text = (await r.text()).strip()
                     if "vplink.in/" in text:
@@ -94,11 +99,11 @@ async def _task_new(user_id: int, ltype: str) -> dict:
         "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
         "user_id": str(user_id), "ltype": ltype, "destination": SHORTENER,
     }
-    async with aiohttp.ClientSession() as s:
-        async with s.post(
-            f"{SERVER}/api/shortlink/new", json=payload,
-            timeout=aiohttp.ClientTimeout(total=25)) as r:
-            return await r.json()
+    data = await _api_post(f"{SERVER}/api/shortlink/new", payload)
+    if not data.get("ok"):
+        await _bootstrap()
+        data = await _api_post(f"{SERVER}/api/shortlink/new", payload)
+    return data
 
 
 async def _task_status(token: str) -> dict:
@@ -107,11 +112,45 @@ async def _task_status(token: str) -> dict:
         "name": NAME, "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
         "token": token,
     }
+    data = await _api_post(f"{SERVER}/api/shortlink/check", payload)
+    if not data.get("ok"):
+        await _bootstrap()
+        data = await _api_post(f"{SERVER}/api/shortlink/check", payload)
+    return data
+
+
+async def _api_post(url: str, payload: dict) -> dict:
+    """POST JSON with a generous timeout (Render cold-start can be slow)."""
     async with aiohttp.ClientSession() as s:
-        async with s.post(
-            f"{SERVER}/api/shortlink/check", json=payload,
-            timeout=aiohttp.ClientTimeout(total=25)) as r:
-            return await r.json()
+        try:
+            async with s.post(
+                url, json=payload, timeout=aiohttp.ClientTimeout(total=60)) as r:
+                try:
+                    return await r.json()
+                except Exception:
+                    return {"ok": False, "error": "bad response"}
+        except Exception:
+            return {"ok": False, "error": "network timeout"}
+
+
+async def _heartbeat():
+    """Keep the Render free instance awake so it never sleeps / cold-starts /
+    wipes its SQLite DB. Also re-seeds the owner row every cycle as a safety
+    net — the bot never needs a manual restart."""
+    while True:
+        await asyncio.sleep(240)
+        try:
+            payload = {
+                "key": MASTER_KEY, "appid": NAME, "appname": NAME,
+                "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
+            }
+            if MASTER_KEY:
+                await _api_post(f"{SERVER}/api/bootstrap", payload)
+            else:
+                async with aiohttp.ClientSession() as s:
+                    await s.get(f"{SERVER}/", timeout=aiohttp.ClientTimeout(total=30))
+        except Exception:
+            pass
 
 
 async def _bootstrap():
@@ -549,6 +588,7 @@ async def on_ready():
     ok = await _bootstrap()
     await tree.sync()
     print(f"Logged in as {bot.user}  |  /key synced  |  owner row: {'re-seeded' if ok else 'NOT seeded (check config key)'}")
+    bot.loop.create_task(_heartbeat())
 
 
 bot.run(CFG["token"])
