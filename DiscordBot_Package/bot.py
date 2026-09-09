@@ -301,59 +301,71 @@ class UserKeyTypeView(ui.View):
 
     async def _start(self, interaction: discord.Interaction, ltype: str):
         if interaction.user.id != self.user_id:
-            return
-        allowed, remaining = _user_cooldown_ok(self.user_id)
-        if not allowed:
-            return await interaction.response.send_message(
-                f"Please wait {_format_time(remaining)} before generating a new key.", ephemeral=True)
-        await interaction.response.defer(ephemeral=True)
+            try:
+                return await interaction.response.send_message(
+                    "This button is not for you.", ephemeral=True)
+            except Exception:
+                return
+        try:
+            allowed, remaining = _user_cooldown_ok(self.user_id)
+            if not allowed:
+                return await interaction.response.send_message(
+                    f"Please wait {_format_time(remaining)} before generating a new key.", ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
 
-        res = await _task_new(self.user_id, ltype)
-        if not res.get("ok"):
-            return await interaction.followup.send(
-                "Could not start the task. Try again later.", ephemeral=True)
+            res = await _task_new(self.user_id, ltype)
+            if not res.get("ok"):
+                return await interaction.followup.send(
+                    "Could not start the task. Try again later.", ephemeral=True)
 
-        token = res["token"]
-        callback = f"{SERVER}/api/shortlink/v?token={token}"
-        link = await _shorten(callback)
-        if not link:
-            return await interaction.followup.send(
-                "Shortener link is not configured. Contact admin.", ephemeral=True)
-        if VPLINK_API and "vplink.in/" not in link:
-            return await interaction.followup.send(
-                "\u26a0\ufe0f **Verification link could not be generated.**\n"
-                "Please contact the support team and inform them the shortener "
-                "service is misconfigured (`vplink_api`).", ephemeral=True)
+            token = res["token"]
+            callback = f"{SERVER}/api/shortlink/v?token={token}"
+            link = await _shorten(callback)
+            if not link:
+                return await interaction.followup.send(
+                    "Shortener link is not configured. Contact admin.", ephemeral=True)
+            if VPLINK_API and "vplink.in/" not in link:
+                return await interaction.followup.send(
+                    "\u26a0\ufe0f **Verification link could not be generated.**\n"
+                    "Please contact the support team and inform them the shortener "
+                    "service is misconfigured (`vplink_api`).", ephemeral=True)
 
-        text = (
-            f"**\U0001f510 Task Verification Required**\n\n"
-            f"Before your **{self._pick(ltype)}** is issued, please complete a "
-            f"quick verification step in your browser.\n\n"
-            f"**1.** Tap **\U0001f517 Open Link** \u2014 it will open in your default browser.\n"
-            f"**2.** Let the **8-second countdown** finish. \u26a0\ufe0f Do **not** close "
-            f"the tab or press the back button.\n"
-            f"**3.** When the page confirms your task is verified, tap "
-            f"**\u2705 I completed the link** below.\n\n"
-            f"Your key will be delivered to your Direct Messages immediately after "
-            f"the server verifies your completion.\n\n"
-            f"\u23f1\ufe0f Request expires in **{TASK_TIMEOUT_SECONDS // 60} minutes**.\n"
-            f"Key duration: **{KEY_HOURS} hours**."
-        )
-        msg = await interaction.followup.send(
-            text, view=TaskClaimView(token, self.user_id, ltype, link),
-            ephemeral=True, wait=True)
-        if getattr(msg, "id", None):
-            PENDING[token] = {
-                "channel_id": interaction.channel_id,
-                "msg_id": msg.id,
-                "user_id": self.user_id,
-                "ltype": ltype,
-                "link": link,
-            }
-            bot.loop.create_task(_watch_status(token))
-        else:
-            await interaction.followup.send(
-                "Task started, but I couldn't track it. Contact admin.", ephemeral=True)
+            text = (
+                f"**\U0001f510 Task Verification Required**\n\n"
+                f"Before your **{self._pick(ltype)}** is issued, please complete a "
+                f"quick verification step in your browser.\n\n"
+                f"**1.** Tap **\U0001f517 Open Link** \u2014 it will open in your default browser.\n"
+                f"**2.** Let the **8-second countdown** finish. \u26a0\ufe0f Do **not** close "
+                f"the tab or press the back button.\n"
+                f"**3.** When the page confirms your task is verified, tap "
+                f"**\u2705 I completed the link** below.\n\n"
+                f"Your key will be delivered to your Direct Messages immediately after "
+                f"the server verifies your completion.\n\n"
+                f"\u23f1\ufe0f Request expires in **{TASK_TIMEOUT_SECONDS // 60} minutes**.\n"
+                f"Key duration: **{KEY_HOURS} hours**."
+            )
+            msg = await interaction.followup.send(
+                text, view=TaskClaimView(token, self.user_id, ltype, link),
+                ephemeral=True, wait=True)
+            if getattr(msg, "id", None):
+                PENDING[token] = {
+                    "channel_id": interaction.channel_id,
+                    "msg_id": msg.id,
+                    "user_id": self.user_id,
+                    "ltype": ltype,
+                    "link": link,
+                }
+                bot.loop.create_task(_watch_status(token))
+            else:
+                await interaction.followup.send(
+                    "Task started, but I couldn't track it. Contact admin.", ephemeral=True)
+        except Exception:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.followup.send(
+                        "Something went wrong. Please try again.", ephemeral=True)
+            except Exception:
+                pass
 
     @ui.button(label="License Key", style=discord.ButtonStyle.primary, emoji="\U0001f511")
     async def on_license(self, interaction: discord.Interaction, button: ui.Button):
@@ -403,9 +415,7 @@ async def _deliver_key(task: dict, token: str):
         target = bot.get_user(user_id) or await bot.fetch_user(user_id)
         await target.send(dm_text)
         sent = True
-    except discord.Forbidden:
-        sent = False
-    except discord.HTTPException:
+    except Exception:
         sent = False
 
     what = "Username + Password" if ltype == "user" else "License Key"
@@ -463,17 +473,28 @@ class CustomDaysModal(ui.Modal, title="Custom key duration"):
         except ValueError:
             return await interaction.response.send_message(
                 "Enter a valid number of days (1 to 3650).", ephemeral=True)
-        await interaction.response.defer(ephemeral=True)
-        username = f"dc_{interaction.user.id}"
-        from datetime import datetime, timezone, timedelta
-        until = int((datetime.now(timezone.utc) + timedelta(days=n)).timestamp() * 1000)
-        ltype = self.ltype
-        data = await _botkey(username, duration="custom", ltype=ltype,
-                             password=_passwd() if ltype == "user" else None)
-        if not data.get("ok"):
-            return await interaction.followup.send("API error.", ephemeral=True)
-        await interaction.followup.send(
-            f"{_fmt_issue(data)}\nExpires: {data.get('expires')}\nDays: {n}", ephemeral=True)
+        try:
+            await interaction.response.defer(ephemeral=True)
+            username = f"dc_{interaction.user.id}"
+            from datetime import datetime, timezone, timedelta
+            until = int((datetime.now(timezone.utc) + timedelta(days=n)).timestamp() * 1000)
+            ltype = self.ltype
+            data = await _botkey(username, duration="custom", ltype=ltype,
+                                 password=_passwd() if ltype == "user" else None)
+            if not data.get("ok"):
+                return await interaction.followup.send(
+                    "\u274c **Server Error** \u2014 could not issue key. Please try again.", ephemeral=True)
+            await interaction.followup.send(
+                f"\u2705 **Key Issued Successfully**\n\n"
+                f"{_fmt_issue(data)}\n\n"
+                f"\u23f1\ufe0f Expires: {data.get('expires')}\n\u23f0 Duration: {n} day(s)", ephemeral=True)
+        except Exception:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.followup.send(
+                        "\u274c Something went wrong. Please try again.", ephemeral=True)
+            except Exception:
+                pass
 
 
 class OwnerTypeView(ui.View):
@@ -483,13 +504,19 @@ class OwnerTypeView(ui.View):
 
     @ui.button(label="License Key", style=discord.ButtonStyle.primary, emoji="\U0001f511")
     async def on_license(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.send_message(
-            "Choose a duration:", view=OwnerDurationView("license"), ephemeral=True)
+        try:
+            await interaction.response.send_message(
+                "Choose a duration:", view=OwnerDurationView("license"), ephemeral=True)
+        except Exception:
+            pass
 
     @ui.button(label="Username + Password", style=discord.ButtonStyle.success, emoji="\U0001f465")
     async def on_user(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.send_message(
-            "Choose a duration:", view=OwnerDurationView("user"), ephemeral=True)
+        try:
+            await interaction.response.send_message(
+                "Choose a duration:", view=OwnerDurationView("user"), ephemeral=True)
+        except Exception:
+            pass
 
 
 class OwnerDurationView(ui.View):
@@ -499,15 +526,26 @@ class OwnerDurationView(ui.View):
         self.ltype = ltype
 
     async def _issue(self, interaction: discord.Interaction, duration: str):
-        await interaction.response.defer(ephemeral=True)
-        username = f"dc_{interaction.user.id}"
-        ltype = self.ltype
-        data = await _botkey(username, duration=duration, ltype=ltype,
-                             password=_passwd() if ltype == "user" else None)
-        if not data.get("ok"):
-            return await interaction.followup.send("API error.", ephemeral=True)
-        await interaction.followup.send(
-            f"{_fmt_issue(data)}\nExpires: {data.get('expires') or 'permanent'}", ephemeral=True)
+        try:
+            await interaction.response.defer(ephemeral=True)
+            username = f"dc_{interaction.user.id}"
+            ltype = self.ltype
+            data = await _botkey(username, duration=duration, ltype=ltype,
+                                 password=_passwd() if ltype == "user" else None)
+            if not data.get("ok"):
+                return await interaction.followup.send(
+                    "\u274c **Server Error** \u2014 could not issue key. Please try again.", ephemeral=True)
+            await interaction.followup.send(
+                f"\u2705 **Key Issued Successfully**\n\n"
+                f"{_fmt_issue(data)}\n\n"
+                f"\u23f1\ufe0f Expires: {data.get('expires') or 'Permanent'}", ephemeral=True)
+        except Exception:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.followup.send(
+                        "\u274c Something went wrong. Please try again.", ephemeral=True)
+            except Exception:
+                pass
 
     @ui.button(label="Permanent", style=discord.ButtonStyle.danger, emoji="\U0001f512")
     async def on_permanent(self, interaction: discord.Interaction, button: ui.Button):
@@ -531,64 +569,129 @@ class OwnerDurationView(ui.View):
 
     @ui.button(label="Custom days", style=discord.ButtonStyle.secondary, emoji="\U0001f4c8")
     async def on_custom(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.send_modal(CustomDaysModal(self.ltype))
+        try:
+            await interaction.response.send_modal(CustomDaysModal(self.ltype))
+        except Exception:
+            pass
 
 
 # ── /key command ────────────────────────────────────────────────────────────
 @tree.command(name="key", description="Generate or claim a key")
 async def key_cmd(interaction: discord.Interaction):
-    # Owner path
-    if interaction.user.id == BOT_OWNER:
-        return await interaction.response.send_message(
-            "You are the owner. Choose what to issue:", view=OwnerTypeView(), ephemeral=True
-        )
+    try:
+        # Owner path
+        if interaction.user.id == BOT_OWNER:
+            return await interaction.response.send_message(
+                "You are the owner. Choose what to issue:", view=OwnerTypeView(), ephemeral=True
+            )
 
-    # Normal user path — cooldown check
-    allowed, remaining = _user_cooldown_ok(interaction.user.id)
-    if not allowed:
-        return await interaction.response.send_message(
-            f"\u23f1\ufe0f Your previous key is still active. Please wait **{_format_time(remaining)}** before generating a new one.",
-            ephemeral=True,
-        )
+        # Normal user path — cooldown check
+        allowed, remaining = _user_cooldown_ok(interaction.user.id)
+        if not allowed:
+            return await interaction.response.send_message(
+                f"\u23f1\ufe0f Your previous key is still active. Please wait **{_format_time(remaining)}** before generating a new one.",
+                ephemeral=True,
+            )
 
-    await interaction.response.send_message(
-        "Please select the type of key you would like to generate:",
-        view=UserKeyTypeView(interaction.user.id), ephemeral=True,
-    )
+        await interaction.response.send_message(
+            "Please select the type of key you would like to generate:",
+            view=UserKeyTypeView(interaction.user.id), ephemeral=True,
+        )
+    except Exception:
+        try:
+            await interaction.response.send_message(
+                "\u274c Something went wrong. Please try again.", ephemeral=True)
+        except Exception:
+            pass
 
 
 # ── /mykey command — view your active key ───────────────────────────────────
 @tree.command(name="mykey", description="Show your active key and expiry")
 async def mykey_cmd(interaction: discord.Interaction):
-    info = DATA["last_keys"].get(str(interaction.user.id))
-    if not info:
-        return await interaction.response.send_message(
-            "You don't have a key yet. Use `/key` to generate one.", ephemeral=True)
-    await interaction.response.send_message(
-        f"**Your Active Key**\n{info['body']}\nExpires: {info['expires']}", ephemeral=True
-    )
+    try:
+        info = DATA["last_keys"].get(str(interaction.user.id))
+        if not info:
+            return await interaction.response.send_message(
+                "You don't have a key yet. Use `/key` to generate one.", ephemeral=True)
+        await interaction.response.send_message(
+            f"**Your Active Key**\n{info['body']}\nExpires: {info['expires']}", ephemeral=True
+        )
+    except Exception:
+        try:
+            await interaction.response.send_message(
+                "\u274c Something went wrong. Please try again.", ephemeral=True)
+        except Exception:
+            pass
 
 
 # ── /status command — check cooldown ───────────────────────────────────────
 @tree.command(name="status", description="Check how long until you can get a new key")
 async def status_cmd(interaction: discord.Interaction):
-    allowed, remaining = _user_cooldown_ok(interaction.user.id)
-    if allowed:
-        return await interaction.response.send_message(
-            "You can generate a new key now. Use `/key`.", ephemeral=True)
-    await interaction.response.send_message(
-        f"\u23f1\ufe0f Please wait **{_format_time(remaining)}** before generating a new key.",
-        ephemeral=True
-    )
+    try:
+        allowed, remaining = _user_cooldown_ok(interaction.user.id)
+        if allowed:
+            return await interaction.response.send_message(
+                "You can generate a new key now. Use `/key`.", ephemeral=True)
+        await interaction.response.send_message(
+            f"\u23f1\ufe0f Please wait **{_format_time(remaining)}** before generating a new key.",
+            ephemeral=True
+        )
+    except Exception:
+        try:
+            await interaction.response.send_message(
+                "\u274c Something went wrong. Please try again.", ephemeral=True)
+        except Exception:
+            pass
+
+
+# ── Error handlers ──────────────────────────────────────────────────────────
+@bot.event
+async def on_error(event, *args, **kwargs):
+    import traceback, sys
+    print(f"[bot] unhandled error in '{event}'", file=sys.stderr)
+    traceback.print_exc()
+
+
+@tree.error
+async def on_app_command_error(interaction: discord.Interaction, error):
+    try:
+        if not interaction.response.is_done():
+            await interaction.response.send_message(
+                "\u274c Something went wrong. Please try again.", ephemeral=True)
+    except Exception:
+        pass
 
 
 # ── Startup ─────────────────────────────────────────────────────────────────
 @bot.event
 async def on_ready():
-    ok = await _bootstrap()
-    await tree.sync()
-    print(f"Logged in as {bot.user}  |  /key synced  |  owner row: {'re-seeded' if ok else 'NOT seeded (check config key)'}")
-    bot.loop.create_task(_heartbeat())
+    try:
+        ok = await _bootstrap()
+        await tree.sync()
+        print(f"Logged in as {bot.user}  |  /key synced  |  owner row: {'re-seeded' if ok else 'NOT seeded (check config key)'}")
+        bot.loop.create_task(_heartbeat())
+    except Exception:
+        print("[bot] on_ready error (will retry on next connect)")
 
 
-bot.run(CFG["token"])
+# ── Self-healing restart wrapper ────────────────────────────────────────────
+def _run():
+    """Bot kabhi permanently crash nahi hoga. Agar Discord gateway connection
+    tootta hai ya koi fatal exception aata hai, 5 sec baad khud restart ho
+    jayega — manual restart ki zaroorat kabhi nahi padegi."""
+    import traceback, sys
+    while True:
+        try:
+            print("[bot] starting bot…")
+            bot.run(CFG["token"], reconnect=True)
+        except KeyboardInterrupt:
+            print("\n[bot] stopped by user.")
+            break
+        except Exception:
+            print("[bot] crashed — restarting in 5 seconds…", file=sys.stderr)
+            traceback.print_exc()
+            time.sleep(5)
+
+
+if __name__ == "__main__":
+    _run()
