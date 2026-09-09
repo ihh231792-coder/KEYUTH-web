@@ -12,6 +12,10 @@ import aiohttp
 import discord
 from discord import app_commands, ui
 
+HTTP = None          # shared aiohttp session — set in on_ready
+_HEARTBEAT_OK = False # prevents duplicate heartbeat tasks
+
+
 # ── Config ──────────────────────────────────────────────────────────────────
 CFG_PATH = Path(__file__).parent / "config.json"
 DATA_PATH = Path(__file__).parent / "data.json"
@@ -74,22 +78,21 @@ async def _shorten(url: str) -> str | None:
     original URL if VPLINK is not configured or fails."""
     if not VPLINK_API or not url:
         return url or None
+    if not HTTP:
+        return url
     params = {
         "api": VPLINK_API,
         "url": url,
         "format": "text",
     }
-    async with aiohttp.ClientSession() as s:
-        try:
-            async with s.get(
-                "https://vplink.in/api", params=params,
-                timeout=aiohttp.ClientTimeout(total=30)) as r:
-                if r.status == 200:
-                    text = (await r.text()).strip()
-                    if "vplink.in/" in text:
-                        return text
-        except Exception:
-            pass
+    try:
+        async with HTTP.get("https://vplink.in/api", params=params) as r:
+            if r.status == 200:
+                text = (await r.text()).strip()
+                if "vplink.in/" in text:
+                    return text
+    except Exception:
+        pass
     return url or None
 
 
@@ -120,17 +123,17 @@ async def _task_status(token: str) -> dict:
 
 
 async def _api_post(url: str, payload: dict) -> dict:
-    """POST JSON with a generous timeout (Render cold-start can be slow)."""
-    async with aiohttp.ClientSession() as s:
-        try:
-            async with s.post(
-                url, json=payload, timeout=aiohttp.ClientTimeout(total=60)) as r:
-                try:
-                    return await r.json()
-                except Exception:
-                    return {"ok": False, "error": "bad response"}
-        except Exception:
-            return {"ok": False, "error": "network timeout"}
+    """POST JSON with the shared session (fast keep-alive, no new TCP per call)."""
+    if not HTTP:
+        return {"ok": False, "error": "no session"}
+    try:
+        async with HTTP.post(url, json=payload) as r:
+            try:
+                return await r.json()
+            except Exception:
+                return {"ok": False, "error": "bad response"}
+    except Exception:
+        return {"ok": False, "error": "network timeout"}
 
 
 async def _heartbeat():
@@ -139,16 +142,19 @@ async def _heartbeat():
     net — the bot never needs a manual restart."""
     while True:
         await asyncio.sleep(240)
+        if not HTTP:
+            continue
         try:
             payload = {
                 "key": MASTER_KEY, "appid": NAME, "appname": NAME,
                 "ownerid": OWNERID, "secret": SECRET, "version": VERSION,
             }
             if MASTER_KEY:
-                await _api_post(f"{SERVER}/api/bootstrap", payload)
+                async with HTTP.post(f"{SERVER}/api/bootstrap", json=payload) as r:
+                    pass
             else:
-                async with aiohttp.ClientSession() as s:
-                    await s.get(f"{SERVER}/", timeout=aiohttp.ClientTimeout(total=30))
+                async with HTTP.get(f"{SERVER}/") as r:
+                    pass
         except Exception:
             pass
 
@@ -160,6 +166,8 @@ async def _bootstrap():
     the owner row automatically — no manual reseed ever needed."""
     if not MASTER_KEY or not NAME:
         return False
+    if not HTTP:
+        return False
     payload = {
         "key": MASTER_KEY,
         "appid": NAME,
@@ -168,16 +176,14 @@ async def _bootstrap():
         "secret": SECRET,
         "version": VERSION,
     }
-    async with aiohttp.ClientSession() as s:
-        try:
-            async with s.post(
-                f"{SERVER}/api/bootstrap", json=payload,
-                timeout=aiohttp.ClientTimeout(total=25)) as r:
-                if r.status == 200:
-                    data = await r.json()
-                    return bool(data.get("ok"))
-        except Exception:
-            return False
+    try:
+        async with HTTP.post(
+            f"{SERVER}/api/bootstrap", json=payload) as r:
+            if r.status == 200:
+                data = await r.json()
+                return bool(data.get("ok"))
+    except Exception:
+        return False
     return False
 
 
@@ -662,14 +668,46 @@ async def on_app_command_error(interaction: discord.Interaction, error):
         pass
 
 
+# ── Connection watchdog ─────────────────────────────────────────────────────
+async def _connection_watchdog():
+    """Bot kabhi silently dead nahi rahega. Agar Discord websocket band
+    ho jata hai aur 90 sec tak reconnect nahi hota, bot ko force restart
+    kar deta hai — auto-restart wrapper (_run) use ko wapas start karega."""
+    global HTTP
+    await bot.wait_until_ready()
+    while True:
+        await asyncio.sleep(90)
+        if bot.is_closed():
+            print("[watchdog] connection lost — forcing restart")
+            if HTTP:
+                try:
+                    await HTTP.close()
+                except Exception:
+                    pass
+            try:
+                await bot.close()
+            except Exception:
+                pass
+            return
+
+
 # ── Startup ─────────────────────────────────────────────────────────────────
 @bot.event
 async def on_ready():
+    global HTTP, _HEARTBEAT_OK
     try:
+        # Create shared HTTP session (single TCP connection, fast keep-alive)
+        if not HTTP:
+            HTTP = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=60),
+                connector=aiohttp.TCPConnector(limit=20))
         ok = await _bootstrap()
         await tree.sync()
         print(f"Logged in as {bot.user}  |  /key synced  |  owner row: {'re-seeded' if ok else 'NOT seeded (check config key)'}")
-        bot.loop.create_task(_heartbeat())
+        if not _HEARTBEAT_OK:
+            _HEARTBEAT_OK = True
+            bot.loop.create_task(_heartbeat())
+            bot.loop.create_task(_connection_watchdog())
     except Exception:
         print("[bot] on_ready error (will retry on next connect)")
 
@@ -679,8 +717,11 @@ def _run():
     """Bot kabhi permanently crash nahi hoga. Agar Discord gateway connection
     tootta hai ya koi fatal exception aata hai, 5 sec baad khud restart ho
     jayega — manual restart ki zaroorat kabhi nahi padegi."""
+    global HTTP, _HEARTBEAT_OK
     import traceback, sys
     while True:
+        HTTP = None
+        _HEARTBEAT_OK = False
         try:
             print("[bot] starting bot…")
             bot.run(CFG["token"], reconnect=True)
