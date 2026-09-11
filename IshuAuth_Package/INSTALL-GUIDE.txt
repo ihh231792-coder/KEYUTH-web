@@ -67,6 +67,9 @@ var res = await IshuAuthApp.login("user123", "pass123");
 if (res.success) Console.WriteLine("LOGIN OK @ " + res.expiry);
 else Console.WriteLine("DENIED: " + res.message);
 
+// HWID auto bheja jata hai (ISHU_Auth_API.cs ka Fingerprint() stable hai —
+// SHA-256 of MachineGuid, SAME PC par hamesha same value, restart pe bhi).
+
 // license key login:
 var lic = await IshuAuthApp.license("LIC_XXXX-....");
 if (lic.success) Console.WriteLine("LOGIN OK @ " + lic.expiry);
@@ -103,7 +106,7 @@ invalid ownerid/secret   | name/ownerid/secret/version galat | panel se phir se 
 invalid username or key  | user/license exist nahi karta     | Users page me phle banao
 subscription expired     | time khatam                        | Renew karo
 user banned              | aapne/owner ne ban kiya hai        | Unban karo
-hwid mismatch            | user doosre PC pe chala raha hai   | ResetHwid karo
+hwid mismatch            | user doosre PC pe chala raha hai   | ResetHwid karo (sirf tab jab wo PC badle)
 server unreachable       | server URL galat / internet down   | api.Server check karo
 
 --------------------------------------------------------
@@ -111,6 +114,12 @@ NOTE
 --------------------------------------------------------
 - Is package me koi NuGet package ya DLL nahi chahiye -
   sirf ek .cs file project me add karni hai.
+- IMPORTANT (HWID BUG FIX): Purana SDK GetHashCode() use karta tha,
+  jo .NET me har app launch pe alag value deta hai — isliye same PC
+  par bhi "hwid mismatch" aa kar "Reset HWID" mangta tha. Naye SDK me
+  Fingerprint() SHA-256 based hai: SAME PC = hamesha same HWID.
+  Existing keys ke liye EK baar HWID reset karna hoga (naya SDK lene
+  ke baad), uske baad phir kabhi reset nahi mangega — jab tak PC na badle.
 - Ye package ISHU AUTH platform ke liye hai:
   jo bhi isse download kare, uske apne panel login se
   alag alag owner apni app banate hain - sab safe/isolated.

@@ -14,7 +14,10 @@ class Example
         auth.AppId  = "APP-XXXXXX";              // panel: Applications page
 
         // ---------- 1) APP LOGIN ----------
-        var r = await auth.Verify("user123", "pass123", "PC-FINGERPRINT");
+        // Use IshuAuth.Fingerprint() — stable across restarts (SHA-256 of MachineGuid).
+        // Do NOT pass GetHashCode() or Environment.MachineName — those are NOT
+        // deterministic and will cause "hwid mismatch" on every launch.
+        var r = await auth.Verify("user123", "pass123", IshuAuth.Fingerprint());
         if (r.Success)
         {
             Console.WriteLine("LOGIN OK      @ " + r.Expires);

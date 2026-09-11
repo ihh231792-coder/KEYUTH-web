@@ -15,7 +15,7 @@
 //     auth.AppId  = "APP-XXXXXX";                // panel: Applications
 //
 //     var r = await auth.Verify("user123", "pass123",
-//             WindowsIdentity.GetCurrent().User.Value);   // HWID
+//             IshuAuth.Fingerprint());                  // stable HWID
 //     if (r.Success) { /* app unlocked */ }
 //     else MessageBox.Show("DENIED: " + r.Message);
 //
@@ -40,6 +40,31 @@ public class IshuAuth
     public string AppId = "";
 
     static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+
+    /// <summary>Stable device fingerprint (SHA-256 of Windows MachineGuid) — use as the HWID.
+    /// Same PC always returns the same value, so the key stays locked to this PC and
+    /// keeps working across restarts. Do NOT use GetHashCode() — .NET randomizes it
+    /// per process run, so it would change on every launch and force HWID resets.</summary>
+    public static string Fingerprint()
+    {
+        string guid = "";
+        try
+        {
+            guid = Microsoft.Win32.Registry.GetValue(
+                @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography",
+                "MachineGuid", "")?.ToString() ?? "";
+        }
+        catch { }
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+        {
+            byte[] hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(
+                (string.IsNullOrEmpty(guid) ? Environment.MachineName : guid) +
+                "|" + Environment.MachineName));
+            var sb = new System.Text.StringBuilder(32);
+            foreach (byte b in hash) sb.Append(b.ToString("X2"));
+            return "HW-" + sb.ToString().Substring(0, 16);
+        }
+    }
 
     // ---------- APP LOGIN / VERIFY ----------
     // user: username     (if logging in with a license key, use the key itself)

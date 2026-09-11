@@ -26,9 +26,15 @@ INSTALL (do you need any package? NO)
    auth.ApiKey = "ISHU_XXXX-....";
    auth.AppId  = "APP-XXXXXX";
 
-   var r = await auth.Verify("user123", "pass123", "PC-FINGERPRINT");
+   var r = await auth.Verify("user123", "pass123", IshuAuth.Fingerprint());
    if (r.Success) Console.WriteLine("LOGIN OK @ " + r.Expires);
    else Console.WriteLine("DENIED: " + r.Message);
+
+   IMPORTANT: ALWAYS pass IshuAuth.Fingerprint() as the HWID. It is a
+   stable SHA-256 of the PC's MachineGuid — the SAME PC always gives the
+   same value, so the key works across restarts. Never pass GetHashCode()
+   or Environment.MachineName as HWID — those change on every launch and
+   cause "hwid mismatch" (the "reset HWID" loop you keep hitting).
 
 CONTROL (create/reset/renew/ban — same as the panel)
 ----------------------------------------------------
@@ -38,8 +44,9 @@ CONTROL (create/reset/renew/ban — same as the panel)
    await auth.Ban(licenseId, true);
 
 What is HWID?  The user's unique device fingerprint
-(they can only log in from one PC/phone). Reset it from the panel,
-then they can do a fresh login.
+(they can only log in from one PC/phone). With the new SDK the same PC
+NEVER needs an HWID reset — only reset it when the user changes PC.
+Reset it from the panel (or ResetHwid), then they can do a fresh login.
 
 Android/APK?  Java needs no package - use HttpURLConnection
 (see the notice in Example.cs). Flutter just uses the `http` package.

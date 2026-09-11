@@ -174,17 +174,28 @@ namespace ISHU_Auth
             return m.Success ? m.Groups[1].Value : "";
         }
 
-        /// <summary>HWID fingerprint (machine GUID hash) — device lock.</summary>
+        /// <summary>HWID fingerprint — stable, deterministic device lock.
+        /// SHA-256 of the Windows MachineGuid (NOT GetHashCode, which is
+        /// randomized per process run and would change on every restart).</summary>
         public static string Fingerprint()
         {
+            string guid = "";
             try
             {
-                var guid = Microsoft.Win32.Registry.GetValue(
+                guid = Microsoft.Win32.Registry.GetValue(
                     @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography",
                     "MachineGuid", "")?.ToString() ?? "";
-                return guid.Length > 0 ? guid.GetHashCode().ToString("X8") : "ISHU-DEFAULT";
             }
-            catch { return "ISHU-DEFAULT"; }
+            catch { }
+            string raw = (string.IsNullOrEmpty(guid) ? Environment.MachineName : guid) +
+                         "|" + Environment.MachineName;
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(raw));
+                var sb = new System.Text.StringBuilder(32);
+                foreach (byte b in hash) sb.Append(b.ToString("X2"));
+                return "HW-" + sb.ToString().Substring(0, 16);
+            }
         }
     }
 
