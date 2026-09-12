@@ -164,8 +164,8 @@ function buildApp(user) {
     ownerTag: user.ownerId,
     name: user.username,
     version: user.version || '1.0',
-    secretId: Crypto.keyString('SEC'),
-    apiKey: Crypto.keyString('ISHU'),
+    secretId: user.secretId,
+    apiKey: user.apiKey,
     swid: null,
     createdAt: Date.now()
   };
@@ -229,7 +229,20 @@ const Apps = {
   all() {
     const db = DB.load();
     const uid = Session.userId();
-    return db.apps.filter(a => a.ownerId === uid);
+    const list = db.apps.filter(a => a.ownerId === uid);
+    const me = db.users.find(u => u.id === uid);
+    if (me) {
+      let dirty = false;
+      list.forEach(a => {
+        if (a.secretId !== me.secretId || a.apiKey !== me.apiKey) {
+          a.secretId = me.secretId;
+          a.apiKey = me.apiKey;
+          dirty = true;
+        }
+      });
+      if (dirty) DB.save(db);
+    }
+    return list;
   },
   ensureDefault() {
     const user = Auth.current();
@@ -257,8 +270,8 @@ const Apps = {
       ownerTag: user.ownerId,
       name: name.trim(),
       version: version || '1.0',
-      secretId: Crypto.keyString('SEC'),
-      apiKey: Crypto.keyString('ISHU'),
+      secretId: user.secretId,
+      apiKey: user.apiKey,
       swid: null,
       createdAt: Date.now()
     };
