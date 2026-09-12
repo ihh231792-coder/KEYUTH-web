@@ -352,14 +352,21 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json(fail("key and appid required"))
             ownerid = body.get("ownerid"); secret = body.get("secret"); version = body.get("version")
             con = db()
-            # keep the first-registered secret/ownerid as the canonical one
+            # Registry rule:
+            #  - App is already bound to a DIFFERENT owner identity -> keep that
+            #    canonical owner + secret (prevents hijacking).
+            #  - SAME owner re-registering -> adopt their current secret/version
+            #    so dashboard "Your Values" and the app detail always match
+            #    (self-heals stale randomly-generated app secrets).
             existing = con.execute(
                 "SELECT owner_id, secret FROM owners WHERE api_key=? AND appid=?",
                 (key, appid)).fetchone()
-            if existing and existing["secret"]:
-                secret = existing["secret"]
-            if existing and existing["owner_id"]:
+            if existing and existing["owner_id"] and existing["owner_id"] != ownerid:
+                if existing["secret"]:
+                    secret = existing["secret"]
                 ownerid = existing["owner_id"]
+            elif not secret and existing and existing["secret"]:
+                secret = existing["secret"]
             con.execute(
                 "INSERT OR REPLACE INTO owners (api_key, appid, appname, owner_label, owner_id, secret, version)"
                 " VALUES (?,?,?,?,?,?,?)",
