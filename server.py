@@ -36,8 +36,13 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(ROOT, "ishu_auth.db")
+DB_PATH = os.environ.get("ISHU_DB_PATH") or os.path.join(ROOT, "ishu_auth.db")
 PORT = int(os.environ.get("PORT", "3000"))
+# When DATABASE_URL is set (e.g. a free Neon/Supabase Postgres), all data is
+# stored remotely and survives every render deploy/restart. Without it we fall
+# back to the local SQLite file (dev / tests).
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+USING_PG = bool(DATABASE_URL)
 
 DUR_MS = {
     "permanent": 0,
@@ -129,7 +134,97 @@ var T={token:"__T__",sig:"__S__",dest:"__D__",left:8};
     .replace("__D__", html_esc(dest))
 
 
+class _Result:
+    """dict-row result so one execute() API works for sqlite + Postgres."""
+    __slots__ = ("_rows",)
+
+    def __init__(self, rows):
+        self._rows = rows
+
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+
+    def fetchall(self):
+        return self._rows
+
+
+class _Conn:
+    """Connection wrapper: isolates the backend so handlers stay unchanged."""
+
+    def __init__(self, raw, pg):
+        self._raw = raw
+        self._pg = pg
+
+    def execute(self, sql, params=()):
+        if self._pg:
+            cur = self._raw.cursor()
+            if isinstance(params, dict):
+                sql2 = re.sub(r":(\w+)", r"%(\1)s", sql)
+                cur.execute(sql2, params)
+            else:
+                cur.execute(sql.replace("?", "%s"), list(params) if params else params)
+            rows = []
+            if cur.description:
+                cols = [d[0] for d in cur.description]
+                rows = [dict(zip(cols, r)) for r in cur.fetchall()]
+            cur.close()
+            return _Result(rows)
+        cur = self._raw.execute(sql, params)
+        rows = []
+        if cur.description:
+            cols = [d[0] for d in cur.description]
+            rows = [dict(zip(cols, r)) for r in cur.fetchall()]
+        return _Result(rows)
+
+    def executemany(self, sql, seq):
+        if self._pg:
+            cur = self._raw.cursor()
+            cur.executemany(sql.replace("?", "%s"), [list(x) for x in seq])
+            cur.close()
+            return
+        self._raw.executemany(sql, seq)
+
+    def commit(self):
+        self._raw.commit()
+
+    def close(self):
+        self._raw.close()
+
+
+def _pg_connect():
+    try:
+        import psycopg
+        return psycopg.connect(DATABASE_URL, connect_timeout=30)
+    except Exception:
+        import psycopg2
+        return psycopg2.connect(DATABASE_URL, connect_timeout=30)
+
+
 def db_init():
+    if USING_PG:
+        con = _pg_connect()
+        cur = con.cursor()
+        try:
+            cur.execute("CREATE TABLE IF NOT EXISTS owners ("
+                        "api_key TEXT, appid TEXT, appname TEXT, owner_label TEXT,"
+                        " owner_id TEXT, secret TEXT, version TEXT,"
+                        " PRIMARY KEY (api_key, appid))")
+            for _col in ("owner_id", "secret", "version"):
+                cur.execute("ALTER TABLE owners ADD COLUMN IF NOT EXISTS %s TEXT" % _col)
+            cur.execute("CREATE TABLE IF NOT EXISTS licenses ("
+                        "id TEXT PRIMARY KEY, appid TEXT, username TEXT, password_hash TEXT,"
+                        " type TEXT, license_key TEXT, hwid TEXT,"
+                        " hwid_locked INTEGER DEFAULT 1, duration TEXT, expires_at BIGINT,"
+                        " created_at BIGINT, last_login BIGINT, banned INTEGER DEFAULT 0)")
+            cur.execute("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS hwid_locked INTEGER DEFAULT 1")
+            cur.execute("CREATE TABLE IF NOT EXISTS shortlink_tasks ("
+                        "token TEXT PRIMARY KEY, user_id TEXT, ltype TEXT, destination TEXT,"
+                        " created_at BIGINT, completed INTEGER DEFAULT 0, completed_at BIGINT, ip TEXT)")
+            cur.execute("ALTER TABLE shortlink_tasks ADD COLUMN IF NOT EXISTS ip TEXT")
+            con.commit()
+        finally:
+            con.close()
+        return
     con = sqlite3.connect(DB_PATH)
     con.execute("""
         CREATE TABLE IF NOT EXISTS owners (
@@ -182,14 +277,13 @@ def db_init():
 
 
 def db():
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    return con
+    if USING_PG:
+        return _Conn(_pg_connect(), True)
+    return _Conn(sqlite3.connect(DB_PATH), False)
 
 
 def row2dict(r):
-    d = dict(r)
-    return d
+    return dict(r)
 
 
 def ok(**data):
@@ -367,10 +461,19 @@ class Handler(SimpleHTTPRequestHandler):
                 ownerid = existing["owner_id"]
             elif not secret and existing and existing["secret"]:
                 secret = existing["secret"]
-            con.execute(
-                "INSERT OR REPLACE INTO owners (api_key, appid, appname, owner_label, owner_id, secret, version)"
-                " VALUES (?,?,?,?,?,?,?)",
-                (key, appid, appname or "", key[:12], ownerid, secret, version))
+            if USING_PG:
+                con.execute(
+                    "INSERT INTO owners (api_key, appid, appname, owner_label, owner_id, secret, version)"
+                    " VALUES (?,?,?,?,?,?,?)"
+                    " ON CONFLICT (api_key, appid) DO UPDATE SET"
+                    " owner_label=EXCLUDED.owner_label, owner_id=EXCLUDED.owner_id,"
+                    " secret=EXCLUDED.secret, version=EXCLUDED.version",
+                    (key, appid, appname or "", key[:12], ownerid, secret, version))
+            else:
+                con.execute(
+                    "INSERT OR REPLACE INTO owners (api_key, appid, appname, owner_label, owner_id, secret, version)"
+                    " VALUES (?,?,?,?,?,?,?)",
+                    (key, appid, appname or "", key[:12], ownerid, secret, version))
             con.commit(); con.close()
             return self._send_json(ok(appid=appid, owner_id=ownerid, secret=secret, version=version, appname=appname))
 
@@ -750,5 +853,5 @@ class Handler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     db_init()
     print(f"  ISHU AUTH server running -> http://localhost:{PORT}")
-    print(f"  SQLite DB: {DB_PATH}")
+    print(f"  Storage: {'Postgres (persistent) via DATABASE_URL' if USING_PG else 'SQLite: ' + DB_PATH}")
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
