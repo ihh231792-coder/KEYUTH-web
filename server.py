@@ -191,13 +191,29 @@ class _Conn:
         self._raw.close()
 
 
+def _pg_clean_url(url):
+    """Drop libpq options some drivers reject (e.g. channel_binding)."""
+    parts = url.split("?", 1)
+    if len(parts) == 1:
+        return url
+    allowed = ("sslmode", "sslrootcert", "connect_timeout", "application_name")
+    kept = [kv for kv in parts[1].split("&") if kv.split("=", 1)[0] in allowed]
+    return parts[0] + ("?" + "&".join(kept) if kept else "")
+
+
 def _pg_connect():
     try:
         import psycopg
         return psycopg.connect(DATABASE_URL, connect_timeout=30)
     except Exception:
+        pass
+    try:
         import psycopg2
         return psycopg2.connect(DATABASE_URL, connect_timeout=30)
+    except Exception:
+        pass
+    import psycopg
+    return psycopg.connect(_pg_clean_url(DATABASE_URL), connect_timeout=30)
 
 
 def db_init():
